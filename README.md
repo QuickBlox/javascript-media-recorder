@@ -1,2 +1,2 @@
-# javascript-video-recorder
-WebRTC video recorder library for Javascript
+# javascript-media-recorder
+WebRTC media recorder library for Javascript
