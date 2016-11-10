@@ -1,0 +1,23 @@
+{
+  "name": "media-recorder-js",
+  "version": "1.0.0",
+  "description": "WebRTC media recorder library for Javascript",
+  "main": "src/index.js",
+  "scripts": {
+    "docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QuickBlox/javascript-media-recorder.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/QuickBlox/javascript-media-recorder/issues"
+  },
+  "homepage": "https://github.com/QuickBlox/javascript-media-recorder#readme",
+  "devDependencies": {
+    "jsdoc": "^3.4.3",
+    "minami": "^1.1.1"
+  }
+}
