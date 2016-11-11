@@ -1,5 +1,8 @@
 /* JSHint inline rules */
 /* globals MediaStream, MediaRecorder, URL, Blob, navigator */
+/* jshint node: true */ 
+
+'use strict';
 
 /**
  * Stream Record Module
@@ -43,9 +46,10 @@
  * 
  */
 
-function Recorder(mediaStream, opts) {
-    'use strict';
+var ERRORS = require('./errors');
+console.info(ERRORS);
 
+function Recorder(mediaStream, opts) {
     var self = this;
 
     if(!Recorder.isAvailable()) {

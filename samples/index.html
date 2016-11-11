@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Media Stream Recorder by Quickblox</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="icon" href="https://docsdev.quickblox.com/themes/quickblox/templates/main_resources/favicon.ico">
+
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="wrap">
+        <header class="title">
+            <h1 class="title_main">Media Stream Recorder
+                <span class="title_sub">by&nbsp;Quickblox</span>
+            </h1>
+        </header>
+
+        <aside class="note">
+            This demo requires Firefox&nbsp;49, Chrome&nbsp;49, Chrome&nbsp;for&nbsp;Android&nbsp;53, Opera&nbsp;41 or&nbsp;later.
+        </aside>
+        
+        <main class="app">
+            <div class="screen">
+                <video autoplay class="j-video video"></video>
+            </div>
+            
+            <div class="actions">
+                <button class="start">Start</button>
+                <button class="pause">Pause</button>
+                <button class="resume">Resume</button>
+                <button class="Stop">Stop</button>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        See <a href="../docs/index.html" target="_blank">docs</a>
+    </footer>
+    
+    <script src="../mediaRecorder.js"></script>
+    
+    <script>
+        var videoEl = document.querySelector('.j-video');
+        
+        var constraints = { audio: true, video: true };
+
+
+        function handleGetStreamSuccess(stream) {
+            var video = document.querySelector('video');
+            
+            video.srcObject = stream;
+            video.onloadedmetadata = function(e) {
+                video.play();
+            };
+        }
+
+        function handleGetStreamError(error) {
+            console.error(error.name + ': ' + error.message);
+        }
+
+        // navigator.mediaDevices.getUserMedia(constraints)
+        //     .then(handleGetStreamSuccess)
+        //     .catch(handleGetStreamError);
+    </script>
+</body>
+</html>

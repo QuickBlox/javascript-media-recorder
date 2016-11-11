@@ -7,6 +7,10 @@
     "plugins": [
         "plugins/markdown"
     ],
+    "markdown": {
+        "parser": "gfm",
+        "hardwrap": true
+    },
     "opts": {
         "encoding": "utf8",
         "destination": "./docs/",
