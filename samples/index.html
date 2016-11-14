@@ -25,14 +25,18 @@
         
         <main class="app">
             <div class="screen">
-                <video autoplay class="j-video video"></video>
+                <video class="j-video video" muted></video>
+
+                <div class="actions">
+                    <button class="btn j-start">Start</button>
+                    <button class="btn j-pause">Pause</button>
+                    <button class="btn j-resume">Resume</button>
+                    <button class="btn j-stop">Stop</button>
+                </div>
             </div>
-            
-            <div class="actions">
-                <button class="start">Start</button>
-                <button class="pause">Pause</button>
-                <button class="resume">Resume</button>
-                <button class="Stop">Stop</button>
+
+            <div class="screenRepeat">
+                <video class="j-videoRecorded video" controls></video>
             </div>
         </main>
     </div>
@@ -44,27 +48,48 @@
     <script src="../mediaRecorder.js"></script>
     
     <script>
-        var videoEl = document.querySelector('.j-video');
-        
-        var constraints = { audio: true, video: true };
-
+        var recorder = null,
+            recorderOpts = {
+                callbacks: {
+                    onStart: function onStart() {
+                        console.info('onStart callback');
+                    },
+                    onStop: function onStop(blob) {
+                        console.info('onStop callback');
+                        
+                        var videoEl = document.querySelector('.j-videoRecorded');
+                        videoEl.src = URL.createObjectURL(blob);
+                    }
+                }
+            },
+            constraints = { audio: true, video: true };
 
         function handleGetStreamSuccess(stream) {
-            var video = document.querySelector('video');
+            var videoEl = document.querySelector('.j-video');
+
+            recorder = new qbMediaRecorder(stream, recorderOpts);
             
-            video.srcObject = stream;
-            video.onloadedmetadata = function(e) {
-                video.play();
-            };
-        }
+            videoEl.src = URL.createObjectURL(stream);
+            videoEl.play();
+       }
 
         function handleGetStreamError(error) {
-            console.error(error.name + ': ' + error.message);
+            console.error(error.name + ': ' + error.message, error);
         }
 
-        // navigator.mediaDevices.getUserMedia(constraints)
-        //     .then(handleGetStreamSuccess)
-        //     .catch(handleGetStreamError);
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(handleGetStreamSuccess)
+            .catch(handleGetStreamError);
+
+        /** Event listeners */
+        document.querySelector('.j-start').addEventListener('click', function() {
+            recorder.start();
+        });
+
+        document.querySelector('.j-stop').addEventListener('click', function() {
+            recorder.stop();
+        });
+
     </script>
 </body>
 </html>

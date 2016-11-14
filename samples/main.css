@@ -19,14 +19,10 @@ article, aside, figure, footer, header, menu, nav, section, time, mark, audio, v
 
 main, article, aside, figure, footer, header, nav, section, details, summary { display: block; }
 
-html {
-    box-sizing: border-box;
-}
-
 *,
 *:before,
 *:after {
-    box-sizing: inherit;
+    box-sizing: border-box;
 }
 
 html { overflow-y: scroll; }
@@ -100,6 +96,10 @@ a:hover {
 }
 
 .video {
+    display: block;
+    width: 400px;
+    height: 300px;
+
     background: #e0e0e0;
 }
 

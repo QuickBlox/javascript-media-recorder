@@ -1,162 +1,254 @@
 /* JSHint inline rules */
-/* globals MediaStream, MediaRecorder, URL, Blob, navigator */
-/* jshint node: true */ 
+/* globals MediaRecorder */
+/* jshint node: true, browser: true */ 
 
 'use strict';
 
-/**
- * Stream Record Module
- * 
- * User's callbacks (listener-functions):
- * - onStartRecording
- * - onPauseRecording
- * - onStopRecording
- * - onErrorRecording
- *
- * @module Recorder
+var ERRORS = require('./errors');
+
+/**  
+ * @constructor qbMediaRecorder
+ * @param  {mediaStream} stream [description]
+ * @param  {object} opts        see below
  *
  * @example
- * var options = {
- *     mimeType: 'video/mp4', // or set 'video' or 'audio' only
- *     audioBitsPerSecond : 256 * 8 * 1024,
- *     videoBitsPerSecond : 256 * 8 * 1024,
- *     bitsPerSecond: 256 * 8 * 1024,  // if this is provided, skip audioBitsPerSecond / videoBitsPerSecond
- *     callbacks: {
- *         onStartRecording: function startRecord() {
- *             console.log('Start recording...');
- *         },
- *         onErrorRecording: function errorRecord(error) {
+ * opts = {
+ *     mimeType: 'audio', // set mimeType of record media or only type of media: 'video'/'audio'.
+ *     ignoreMutedMedia: false, // What to do with a muted input MediaStreamTrack,
+ *                              e.g. insert black frames/zero audio volume in the recording or ignore altogether.
+ *                              By default is `true`.
+ *     _timeSlice: 1000,
+ *     callbacks: { 
+ *         onStart: function startRecord() {
  *             //...
  *         },
- *         onPauseRecording: function pauseRecord() {
+ *         onError: function errorRecord(error) {
  *             //...
  *         },
- *         onStopRecording: function stopRecord(blob) {
+ *         onPause: function pauseRecord() {
  *             //...
  *         },
- *         onResumeRecording: function resimeRecord() {
+ *         onStop: function stopRecord(blob) {
+ *             //...
+ *         },
+ *         onResume: function resimeRecord() {
  *             //...
  *         }
  *     }
  * }
- * 
- * var recorder = new QB.Recorder(stream, options);
- * // start record
- * recorder.record();
- * 
  */
-
-var ERRORS = require('./errors');
-console.info(ERRORS);
-
-function Recorder(mediaStream, opts) {
+function qbMediaRecorder(stream, opts) {
     var self = this;
 
-    if(!Recorder.isAvailable()) {
-        throw new Error('QBRecorder isn\'t avaible.');
+    if(!qbMediaRecorder.isAvailable()) {
+        throw new Error(ERRORS.unsupport);
     }
 
-    var typeOfRecorded = 'video',
-        clientMimeType = opts && opts.mimeType;
+    self._stream = stream;
+    self._mediaRecorder = null;
+    self._recordedChunks = [];
 
-    var BITS_PER_SECOND = 256 * 8 * 1024;
-
-    self._mediaStream = null;
+    self._timeSlice = opts && opts.timeSlice ? opts.timeSlice : 1000;
     self._userCallbacks = opts && opts.callbacks ? opts.callbacks : null; 
 
-    if(clientMimeType) {
-        typeOfRecorded = opts.mimeType.toString().toLowerCase().indexOf('audio') === -1 ? 'video' : 'audio';
+    var typeMediaRecorded = 'video', // by default
+        prefferedMimeType = opts && opts.mimeType;
+
+    if(prefferedMimeType) {
+        typeMediaRecorded = prefferedMimeType.toString().toLowerCase().indexOf('audio') === -1 ? 'video' : 'audio';
     }
 
-    /* prepare self._mediaStream for record */
-    if(typeOfRecorded === 'audio') {
-        if(mediaStream.getVideoTracks().length && mediaStream.getAudioTracks().length) {
-            var stream;
-
-            if (!!navigator.mozGetUserMedia) {
-                stream = new MediaStream();
-                stream.addTrack(mediaStream.getAudioTracks()[0]);
-            } else {
-                stream = new MediaStream(mediaStream.getAudioTracks());
-            }
-
-            self._mediaStream = stream;
-        }
-    } else {
-        self._mediaStream = mediaStream;
-    }
-
-    /* prepare setting for MediaRecorder */
-    self.mediaRecorderOptions = {
-        mimeType: Recorder.getSupportedMimeType(typeOfRecorded, clientMimeType),
-        audioBitsPerSecond: opts && opts.audioBitsPerSecond ? opts.audioBitsPerSecond : BITS_PER_SECOND,
-        videoBitsPerSecond : opts && opts.videoBitsPerSecond ? opts.videoBitsPerSecond : BITS_PER_SECOND,
-        bitsPerSecond: opts && opts.bitsPerSecond ? opts.bitsPerSecond : BITS_PER_SECOND
+    /*
+     * Prepare options for self._mediaRecorder
+     */
+    self._options = {
+        mimeType: qbMediaRecorder.getSupportedMimeTypes(typeMediaRecorded, prefferedMimeType)[0],
+        ignoreMutedMedia: opts && typeof opts.ignoreMutedMedia !== undefined ? opts.ignoreMutedMedia : true
     };
-
-    this._mediaRecorder = null;
-    self._recordedBlobs = [];
 }
 
-Recorder._isAvailable = !!(window && window.MediaRecorder);
-
-Recorder.isAvailable = function(){
-    return Recorder._isAvailable;
+/**
+ * Checking is env. supports recording.
+ * @return {Boolean} A Boolean value that returns true if the qbMediaRecorder supports, or false otherwise.
+ */
+qbMediaRecorder.isAvailable = function(){
+    return !!(window && window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function');
 };
 
-Recorder._mimeTypes = {
-    audio: [
+qbMediaRecorder._mimeTypes = {
+    'audio': [
         'audio/webm;codecs=opus',
         'audio/webm',
         'audio/ogg'
     ],
-    video: [
+    'video': [
+        'video/webm;codecs=h264',
         'video/webm;codecs=vp9',
         'video/webm;codecs=vp8',
         'video/webm;codecs=daala',
-        'video/webm;codecs=h264',
         'video/webm',
         'video/mp4',
         'video/mpeg'
     ]
 };
 
-Recorder.getSupportedMimeType = function(type, clientMimeType) {
-    var supportedMimeType;
+/**
+ * [getSupportedMimeType return array of supported mimetypes]
+ * @param  {string} prefferedTypeMedia 'audio' or 'video'. what type of media you want to check support.
+ *                                     By default is 'video'.
+ * @return {array}                    array of supported mimetypes. Recomment mimetype has 0 index.
+ */
+qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
+    var self = this,
+        supportedMimeType = [],
+        typeMedia = prefferedTypeMedia || 'video';
 
-    if(!type && type === '') {
-        throw new Error('Set type of record is require.');
+    if(!qbMediaRecorder.isAvailable()) {
+        throw new Error(ERRORS.unsupport);
     }
 
-    if(!MediaRecorder.isTypeSupported) {
-        supportedMimeType = 'video/mp4';
-    } else {
-        if(clientMimeType && MediaRecorder.isTypeSupported(clientMimeType)) {
-            supportedMimeType = clientMimeType;
-        } else {
-            Recorder._mimeTypes[type].some(function(item) {
-                if(MediaRecorder.isTypeSupported(item)) {
-                    supportedMimeType = item;
-                    return true;
-                }
+    return qbMediaRecorder._mimeTypes[typeMedia].filter(function(mimeType) {
+        return MediaRecorder.isTypeSupported(mimeType);
+    });
+};
 
-                return false;
-            });
+/**
+ * Start to recording a stream.
+ */
+qbMediaRecorder.prototype.start = function() {
+    var self = this;
+
+    function fireCallback(name, args) {
+        if(self._userCallbacks && typeof self._userCallbacks[name] === 'function') {
+            try {
+                self._userCallbacks[name](args);
+            } catch(e) {
+                console.error('Founded an error in callback:' + name, e);
+            }
         }
     }
 
-    return supportedMimeType;
-};
-
-Recorder.prototype.getExtension = function() {
-    var self = this;
-
-    if(!self.mediaRecorderOptions) {
-        throw new Error('Options isn\'t set');
+    if (self._mediaRecorder) {
+        self._mediaRecorder = null;
     }
 
-    var endTypeMedia = self.mediaRecorderOptions.mimeType.indexOf('/'),
-        extension = self.mediaRecorderOptions.mimeType.substring(endTypeMedia + 1),
+    try {
+        self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
+    } catch(e) {
+        console.info(ERRORS.unsupportMediaRecorderWithOptions, e);
+
+        self._mediaRecorder = new window.MediaRecorder(self._stream);
+    }
+
+    self._mediaRecorder.ondataavailable = function(e) {
+        if (e.data && e.data.size > 0) {
+           self._recordedChunks.push(e.data);
+        }
+    };
+
+    self._mediaRecorder.onpause = function() {
+        
+    };
+
+    self._mediaRecorder.onresume = function() {
+        fireCallback('onPause');
+    };
+
+    self._mediaRecorder.onerror = function(error) {
+        switch(error.name) {
+            case 'InvalidState':
+                console.error(ERRORS[error.name]);
+                break;
+
+            case 'OutOfMemory':
+                console.error(ERRORS[error.name]);
+                break;
+
+            case 'IllegalStreamModification':
+                console.error(ERRORS[error.name]);
+                break;
+
+            case 'OtherRecordingError':
+                console.error(ERRORS[error.name]);
+                break;
+
+            case 'GenericError':
+                console.error(ERRORS[error.name]);
+                break;
+
+            default:
+                console.error('MediaRecorder Error', error);
+                break;
+        }
+
+        if(self._mediaRecorder.state !== 'inactive' && self._mediaRecorder.state !== 'stopped') {
+            self._mediaRecorder.stop();
+        }
+
+        if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
+            fireCallback('onError');
+        }
+    };
+
+    self._mediaRecorder.onstop = function(e) {
+        var blob = new Blob(self._recordedChunks, {
+            'type' : self._options.mimeType
+        });
+
+        fireCallback('onStop', blob);
+    };
+
+    self._mediaRecorder.start(self._timeSlice);
+
+    fireCallback('onStart');
+};
+
+/**
+ * Stop to recording a stream
+ * @return {Blob} Blob of recorded chuncks
+ */
+qbMediaRecorder.prototype.stop = function() {
+    var mediaRecorder = this._mediaRecorder,
+        mediaRecorderState = mediaRecorder.state;
+
+    if(mediaRecorder && mediaRecorderState !== 'inactive' && mediaRecorderState !== 'stopped'){
+        mediaRecorder.stop();
+    } else {
+        console.warn(ERRORS.actionFailed);
+    }
+};
+
+/**
+ * Pause to recording a stream
+ */
+qbMediaRecorder.prototype.pause = function() {
+    var self = this;
+
+    if(self._mediaRecorder && self._mediaRecorder.state === 'recording') {
+        self._mediaRecorder.pause();
+    } else {
+        console.warn(ERRORS.actionFailed);
+    }
+};
+
+/**
+ * Resume to recording a stream
+ */
+qbMediaRecorder.prototype.resume = function() {
+    var self = this;
+
+    if(self._mediaRecorder && self._mediaRecorder.state === 'paused') {
+        self._mediaRecorder.resume();
+    } else {
+        console.warn(ERRORS.actionFailed);
+    }
+};
+
+qbMediaRecorder.prototype.getExtension = function() {
+    var self = this;
+
+    var endTypeMedia = self._options.mimeType.indexOf('/'),
+        extension = self._options.mimeType.substring(endTypeMedia + 1),
         startCodecsInfo = extension.indexOf(';');
 
     if(startCodecsInfo !== -1) {
@@ -166,123 +258,7 @@ Recorder.prototype.getExtension = function() {
     return extension;
 };
 
-Recorder.prototype.start = function() {
-    var self = this;
-
-    if (self._mediaRecorder) {
-        self._mediaRecorder = null;
-    }
-
-    try {
-        self._mediaRecorder = new MediaRecorder(self._mediaStream, self.mediaRecorderOptions);
-    } catch(e) {
-        self._mediaRecorder = new MediaRecorder(self._mediaStream);
-    }
-
-    self._mediaRecorder.ondataavailable = function(e) {
-        if (e.data && e.data.size > 0) {
-           self._recordedBlobs.push(e.data);
-        }
-    };
-
-    self._mediaRecorder.onerror = function(error) {
-        if (error.name === 'InvalidState') {
-            console.error('The MediaRecorder is not in a state in which the proposed operation is allowed to be executed.');
-        } else if (error.name === 'OutOfMemory') {
-            console.error('The UA has exhaused the available memory. User agents SHOULD provide as much additional information as possible in the message attribute.');
-        } else if (error.name === 'IllegalStreamModification') {
-            console.error('A modification to the stream has occurred that makes it impossible to continue recording. An example would be the addition of a Track while recording is occurring. User agents SHOULD provide as much additional information as possible in the message attribute.');
-        } else if (error.name === 'OtherRecordingError') {
-            console.error('Used for an fatal error other than those listed above. User agents SHOULD provide as much additional information as possible in the message attribute.');
-        } else if (error.name === 'GenericError') {
-            console.error('The UA cannot provide the codec or recording option that has been requested.', error);
-        } else {
-            console.error('MediaRecorder Error', error);
-        }
-
-        if(self._mediaRecorder.state !== 'inactive' && self._mediaRecorder.state !== 'stopped') {
-            self._mediaRecorder.stop();
-        }
-
-        if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
-            self._userCallbacks.onErrorRecording(error);
-        }
-    };
-
-    self._mediaRecorder.onstop = function(e) {
-        var blob = new Blob(self._recordedBlobs, {
-            'type' : self.mediaRecorderOptions.mimeType
-        });
-
-        if(self._userCallbacks && typeof self._userCallbacks.onStopRecording === 'function') {
-            self._userCallbacks.onStopRecording(blob);
-        }
-    };
-
-    self._mediaRecorder.onpause = function() {
-        if(self._userCallbacks && typeof self._userCallbacks.onPauseRecording === 'function') {
-            self._userCallbacks.onPauseRecording();
-        }
-    };
-
-    self._mediaRecorder.onresume = function() {
-        if(self._userCallbacks && typeof self._userCallbacks.onResumeRecording === 'function') {
-            self._userCallbacks.onResumeRecording();
-        }
-    };
-
-    self._mediaRecorder.start(1000);
-
-    if(self._userCallbacks && typeof self._userCallbacks.onStartRecording === 'function') {
-        self._userCallbacks.onStartRecording();
-    }
-};
-
-Recorder.prototype.stop = function() {
-    var mediaRec = this._mediaRecorder;
-
-    if(mediaRec && mediaRec.state !== 'inactive' && mediaRec.state !== 'stopped'){
-        mediaRec.stop();
-    } else {
-        console.warn('[Recorder stop]: MediaRecorder isn\'t created or has invalid state');
-    }
-};
-
-Recorder.prototype.pause = function() {
-    var self = this;
-
-    if(self._mediaRecorder && self._mediaRecorder.state === 'recording') {
-        self._mediaRecorder.pause();
-
-        // Firefox doesn't fire onpause event
-        if(navigator.mozGetUserMedia) {
-            if(self._userCallbacks && typeof self._userCallbacks.onPauseRecording === 'function') {
-                self._userCallbacks.onPauseRecording();
-            }
-        }
-    } else {
-        console.warn('[Recorder pause]: MediaRecorder isn\'t created or has invalid state.');
-    }
-};
-
-Recorder.prototype.resume = function() {
-    var self = this;
-
-    if(self._mediaRecorder && self._mediaRecorder.state === 'paused') {
-        self._mediaRecorder.resume();
-
-        // Firefox doesn't fire onpause event
-        if(navigator.mozGetUserMedia) {
-            if(self._userCallbacks && typeof self._userCallbacks.onResumeRecording === 'function') {
-                self._userCallbacks.onResumeRecording();
-            }
-        }
-    } else {
-        console.warn('[Recorder resume]: MediaRecorder isn\'t created or has invalid state.');
-    }
-};
-
-Recorder.prototype.download = function(blob, downloadFileName) {
+qbMediaRecorder.prototype.download = function(fileName, blob) {
     var self = this;
 
     var url = URL.createObjectURL(blob || self._recordedBlobs),
@@ -290,7 +266,7 @@ Recorder.prototype.download = function(blob, downloadFileName) {
 
     a.style.display = 'none';
     a.href = url;
-    a.download = (downloadFileName || Date.now()) + '.' + self.getExtension();
+    a.download = (fileName || Date.now()) + '.' + self.getExtension();
 
     document.body.appendChild(a);
 
@@ -304,4 +280,4 @@ Recorder.prototype.download = function(blob, downloadFileName) {
     }, 100);
 };
 
-module.exports = Recorder;
+module.exports = qbMediaRecorder;
