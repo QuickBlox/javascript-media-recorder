@@ -4,8 +4,9 @@
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
   "scripts": {
-    "setDevDependenciesG": "npm i -g browserify",
-    "docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
+    "setDevDependenciesGlobally": "npm i -g browserify",
+    "generate-docs": "node_modules/.bin/jsdoc -c .jsdoc.json",
+    "develop": "gulp develop"
   },
   "repository": {
     "type": "git",
@@ -19,10 +20,12 @@
   "homepage": "https://github.com/QuickBlox/javascript-media-recorder#readme",
   "devDependencies": {
     "browserify": "^13.1.1",
+    "docdash": "^0.4.0",
     "gulp": "^3.9.1",
     "gulp-connect": "^5.0.0",
+    "gulp-notify": "^2.2.0",
+    "gulp-plumber": "^1.1.0",
     "jsdoc": "^3.4.3",
-    "minami": "^1.1.1",
     "vinyl-source-stream": "^1.1.0"
   }
 }

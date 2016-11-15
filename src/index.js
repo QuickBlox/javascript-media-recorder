@@ -1,5 +1,5 @@
 /* JSHint inline rules */
-/* globals MediaRecorder */
+
 /* jshint node: true, browser: true */ 
 
 'use strict';
@@ -8,17 +8,19 @@ var ERRORS = require('./errors');
 
 /**  
  * @constructor qbMediaRecorder
- * @param  {mediaStream} stream [description]
- * @param  {object} opts        see below
+ * @param  {mediaStream} stream object representing a flux of audio- or video-related data.
+ * @param  {object} opts        see example
  *
  * @example
  * opts = {
- *     mimeType: 'audio', // set mimeType of record media or only type of media: 'video'/'audio'.
+ *     mimeType: 'audio',       // set mime type of record media or only type of media: 'video'/'audio'.
  *     ignoreMutedMedia: false, // What to do with a muted input MediaStreamTrack,
- *                              e.g. insert black frames/zero audio volume in the recording or ignore altogether.
- *                              By default is `true`.
- *     _timeSlice: 1000,
- *     callbacks: { 
+ *                              // e.g. insert black frames/zero audio volume in the recording or ignore altogether.
+ *                              // By default is `true`.
+ *     timeSlice: 1000,         // optionally be passed a timeslice argument with a value in milliseconds.
+ *                              // the media will be captured in separate chunks of that duration,
+ *                              // rather than the default behavior of recording the media in a single large chunk.
+ *     callbacks: {             // Note! Use named function for better debug.
  *         onStart: function startRecord() {
  *             //...
  *         },
@@ -44,7 +46,8 @@ function qbMediaRecorder(stream, opts) {
         throw new Error(ERRORS.unsupport);
     }
 
-    self._stream = stream;
+    self._stream;
+    
     self._mediaRecorder = null;
     self._recordedChunks = [];
 
@@ -58,9 +61,12 @@ function qbMediaRecorder(stream, opts) {
         typeMediaRecorded = prefferedMimeType.toString().toLowerCase().indexOf('audio') === -1 ? 'video' : 'audio';
     }
 
-    /*
-     * Prepare options for self._mediaRecorder
-     */
+    /** prepare a stream */
+    // if(typeMediaRecorded === 'audio') {
+    //     self._stream = new window.MediaStream();
+    //     self._stream.addTrack(stream.getAudioTracks()[0]);
+    // }
+
     self._options = {
         mimeType: qbMediaRecorder.getSupportedMimeTypes(typeMediaRecorded, prefferedMimeType)[0],
         ignoreMutedMedia: opts && typeof opts.ignoreMutedMedia !== undefined ? opts.ignoreMutedMedia : true
@@ -68,13 +74,19 @@ function qbMediaRecorder(stream, opts) {
 }
 
 /**
- * Checking is env. supports recording.
- * @return {Boolean} A Boolean value that returns true if the qbMediaRecorder supports, or false otherwise.
+ * Checking is environment supports recording.
+ * @return {Boolean} Returns true if the qbMediaRecorder is available and can run, or false otherwise.
  */
 qbMediaRecorder.isAvailable = function(){
-    return !!(window && window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function');
+    return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function');
 };
 
+/**
+ * @access private
+ * 
+ * All available mime types in browser environment.
+ * @type {Object}
+ */
 qbMediaRecorder._mimeTypes = {
     'audio': [
         'audio/webm;codecs=opus',
@@ -93,10 +105,11 @@ qbMediaRecorder._mimeTypes = {
 };
 
 /**
- * [getSupportedMimeType return array of supported mimetypes]
- * @param  {string} prefferedTypeMedia 'audio' or 'video'. what type of media you want to check support.
+ * Checking all mime types for support in browser enviroment. Recommended mime type has 0 index.
+ * 
+ * @param  {string} prefferedTypeMedia 'audio' or 'video'. What type of media you want to check support.
  *                                     By default is 'video'.
- * @return {array}                    array of supported mimetypes. Recomment mimetype has 0 index.
+ * @return {array}                     Array of supported mimetypes.
  */
 qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
     var self = this,
@@ -108,12 +121,13 @@ qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
     }
 
     return qbMediaRecorder._mimeTypes[typeMedia].filter(function(mimeType) {
-        return MediaRecorder.isTypeSupported(mimeType);
+        return window.MediaRecorder.isTypeSupported(mimeType);
     });
 };
 
 /**
  * Start to recording a stream.
+ * Fire the method `stop` if record has state `inprogress`.
  */
 qbMediaRecorder.prototype.start = function() {
     var self = this;
@@ -128,9 +142,9 @@ qbMediaRecorder.prototype.start = function() {
         }
     }
 
-    if (self._mediaRecorder) {
-        self._mediaRecorder = null;
-    }
+    /* Clear data from previously recording */ 
+    self._mediaRecorder = null;
+    self._recordedChunks.length = 0;
 
     try {
         self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
@@ -147,11 +161,11 @@ qbMediaRecorder.prototype.start = function() {
     };
 
     self._mediaRecorder.onpause = function() {
-        
+        fireCallback('onPause');
     };
 
     self._mediaRecorder.onresume = function() {
-        fireCallback('onPause');
+        fireCallback('onResume');
     };
 
     self._mediaRecorder.onerror = function(error) {
@@ -186,7 +200,7 @@ qbMediaRecorder.prototype.start = function() {
         }
 
         if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
-            fireCallback('onError');
+            fireCallback('onError', error);
         }
     };
 
@@ -204,14 +218,14 @@ qbMediaRecorder.prototype.start = function() {
 };
 
 /**
- * Stop to recording a stream
- * @return {Blob} Blob of recorded chuncks
+ * Stop to recording a stream.
+ * @return {Blob} Blob of recorded chuncks.
  */
 qbMediaRecorder.prototype.stop = function() {
     var mediaRecorder = this._mediaRecorder,
         mediaRecorderState = mediaRecorder.state;
 
-    if(mediaRecorder && mediaRecorderState !== 'inactive' && mediaRecorderState !== 'stopped'){
+    if(mediaRecorder && mediaRecorderState === 'recording'){
         mediaRecorder.stop();
     } else {
         console.warn(ERRORS.actionFailed);
@@ -219,7 +233,7 @@ qbMediaRecorder.prototype.stop = function() {
 };
 
 /**
- * Pause to recording a stream
+ * Pause to recording a stream.
  */
 qbMediaRecorder.prototype.pause = function() {
     var self = this;
@@ -232,7 +246,7 @@ qbMediaRecorder.prototype.pause = function() {
 };
 
 /**
- * Resume to recording a stream
+ * Resume to recording a stream.
  */
 qbMediaRecorder.prototype.resume = function() {
     var self = this;
@@ -244,7 +258,73 @@ qbMediaRecorder.prototype.resume = function() {
     }
 };
 
-qbMediaRecorder.prototype.getExtension = function() {
+/**
+ * Return a [state of recording](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/state).
+ * Possibly, inactive / paused / recording 
+ * @return {String} A state of recording. 
+ */
+qbMediaRecorder.prototype.getState = function() {
+    return this._mediaRecorder.state;
+};
+
+/**
+ * Create a file from blob and download as the file. Its method will fire 'stop' if recording in progress.
+ * @param  {Strint} fileName Name of file. You can set `false` and we are generate name of file based on Date.now()
+ * @param  {Blob}   blob     You can set blob which you get from the method `stop` or don't set anything and
+ *                           we will get recorded chuncks.
+ */
+qbMediaRecorder.prototype.download = function(fileName, blob) {
+    var self = this;
+
+    var mediaRecorder = this._mediaRecorder,
+        mediaRecorderState = mediaRecorder.state;
+
+    if(mediaRecorder && mediaRecorderState === 'recording') {
+        mediaRecorder.stop();
+    }
+
+    var url = URL.createObjectURL(blob || self._getBlobRecorded()),
+        a = document.createElement('a');
+
+    a.style.display = 'none';
+    a.href = url;
+    a.download = (fileName || Date.now()) + '.' + self._getExtension();
+
+    document.body.appendChild(a);
+
+    /* Start dowloading */
+    a.click();
+    
+    /* Remove link */
+    setTimeout(function() {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }, 100);
+};
+
+/**
+ * Create a Blob from recorded chunks.
+ * @access private
+ * @return {Blob}
+ */
+qbMediaRecorder.prototype._getBlobRecorded = function(data) {
+    var self = this,
+        chunks = data || self._recordedChunks;
+
+    if(!chunks.length) {
+        console.warn(ERRORS.no_recorded_chunks);
+        return false;
+    }
+
+    return new Blob(chunks, { 'type' : self._options.mimeType });
+};
+
+/**
+ * Return a extension of a file. Based on avaible mimeType.
+ * @access private
+ * @return {String} For example, 'webm' / 'mp4' / 'ogg'
+ */
+qbMediaRecorder.prototype._getExtension = function() {
     var self = this;
 
     var endTypeMedia = self._options.mimeType.indexOf('/'),
@@ -258,26 +338,6 @@ qbMediaRecorder.prototype.getExtension = function() {
     return extension;
 };
 
-qbMediaRecorder.prototype.download = function(fileName, blob) {
-    var self = this;
 
-    var url = URL.createObjectURL(blob || self._recordedBlobs),
-        a = document.createElement('a');
-
-    a.style.display = 'none';
-    a.href = url;
-    a.download = (fileName || Date.now()) + '.' + self.getExtension();
-
-    document.body.appendChild(a);
-
-    /* Start dowloading */
-    a.click();
-    
-    /* Remove link */
-    setTimeout(function() {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    }, 100);
-};
 
 module.exports = qbMediaRecorder;

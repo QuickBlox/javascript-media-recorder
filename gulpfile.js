@@ -4,14 +4,23 @@ var source = require('vinyl-source-stream');
 
 var connect = require('gulp-connect');
 
+var plumber = require('gulp-plumber');
+var notify = require('gulp-notify');
+
 gulp.task('build', function() {
     return browserify('./src/index.js', {
             'debug': true,
             'standalone': 'qbMediaRecorder'
         })
         .bundle()
+        .on('error', function(error) {
+            this.emit('end');
+            return notify().write(error);
+        })
+        .pipe(plumber())
         .pipe(source('mediaRecorder.js'))
-        .pipe(gulp.dest('./'));
+        .pipe(gulp.dest('./'))
+        .pipe(notify('Build task is finished'));
 });
 
 gulp.task('connect', function() {
