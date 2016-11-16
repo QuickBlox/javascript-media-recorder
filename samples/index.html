@@ -9,127 +9,120 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="icon" href="https://docsdev.quickblox.com/themes/quickblox/templates/main_resources/favicon.ico">
 
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="css/spectre.min.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <div class="wrap">
-        <header class="title">
-            <h1 class="title_main">Media Stream Recorder
+    <div class="content">
+        <header class="title wrap">
+            <h1 class="title_main text-center">Media Stream Recorder
                 <span class="title_sub">by&nbsp;Quickblox</span>
             </h1>
         </header>
 
-        <aside class="note">
+        <aside class="toast wrap">
             This demo requires Firefox&nbsp;49, Chrome&nbsp;49, Chrome&nbsp;for&nbsp;Android&nbsp;53, Opera&nbsp;41 or&nbsp;later.
         </aside>
-        
-        <main class="app">
-            <div class="screen">
-                <video class="j-video video" muted></video>
 
-                <div class="actions">
-                    <select class="j-type">
-                        <option value="1">Only audio</option>
-                        <option value="2" selected>Audio & Video</option>
-                    </select>
+        <main>
+            <div class="columns wrap">
+                <div class="column col-6 col-xs-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="btn-group btn-group-block">
+                                <label class="form-radio">
+                                    <input type="radio" name="type" value="1" checked>
+                                    <i class="form-icon"></i> Audio only
+                                </label>
 
-                    <button class="btn j-start">Start</button>
-                    <button class="btn j-pause">Pause</button>
-                    <button class="btn j-resume">Resume</button>
-                    <button class="btn j-stop">Stop</button>
+                                <label class="form-radio">
+                                    <input type="radio" name="type" value="2" >
+                                    <i class="form-icon"></i> Audio & Video
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="card-image">
+                            <div class="video-responsive j-media-wrap">
+                                <!-- <audio class="j-video_local" controls></audio> -->
+                                <video class=" j-video_local video" controls></video>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <h5 class="card-title">Recording</h5>
+                            <div class="btn-group btn-group-block">
+                                <button class="btn">Start</button>
+                                <button class="btn">Pause</button>
+                                <button class="btn">Resume</button>
+                                <button class="btn">Stop</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column col-6 col-xs-12">
+                    <div class="card">
+                         <div class="card-image">
+                            <div class="video-responsive">
+                                <video class=" j-video_local video" muted></video>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <h5 class="card-title"></h5>
+                            <div class="btn-group btn-group-block">
+                                <button class="btn" disabled>Clear</button>
+                                <button class="btn" disabled>Download</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="screenRepeat">
-                <video class="j-videoRecorded video" controls></video>
-                <button class="btn j-download" disabled>Download</button>
-            </div>
+
+            
         </main>
+
+         <!-- <main>
+            <section class="init">
+                <select class="j-type">
+                    <option value="1">Only audio</option>
+                    <option value="2" selected>Audio & Video</option>
+                </select>
+
+                <button class="j-startSample">Start streaming</button>
+            </section>
+
+            <section class="j-app hidden">
+                <div class="screen">
+                    <video class="j-video video" muted></video>
+
+                    <div class="actions">
+                        <p>Record</p>
+                        <button class="btn j-start">Start</button>
+                        <button class="btn j-pause">Pause</button>
+                        <button class="btn j-resume">Resume</button>
+                        <button class="btn j-stop">Stop</button>
+                    </div>
+                </div>
+
+                <div class="screenRepeat">
+                    <video class="j-videoRecorded video" controls></video>
+                    <button class="btn j-download" disabled>Download</button>
+                </div>
+            </section>
+        </main> -->
+
     </div>
 
     <footer class="footer">
-        See <a href="../docs/index.html" target="_blank">docs</a>
+        <p class="lead ">
+            See <a href="../docs/index.html" target="_blank">docs</a> and <a href="https://github.com/QuickBlox/javascript-media-recorder/tree/master/samples" target="_blank">source&nbsp;code</a>
+        </p>
     </footer>
     
     <script src="../mediaRecorder.js"></script>
-    
-    <script>
-        var recorder = null,
-            recorderOpts = {
-                mimeType: 'audio',
-                callbacks: {
-                    onStart: function onStart() {
-                        console.info('onStart callback');
-                    },
-                    onStop: function onStop(blob) {
-                        console.info('onStop callback');
-                        
-                        var videoEl = document.querySelector('.j-videoRecorded');
-                        var btnDownloadEl = document.querySelector('.j-download');
-                        
-                        videoEl.src = URL.createObjectURL(blob);
-                        videoEl.volume = 0.5;
-
-                        btnDownloadEl.disabled = false;
-                    },
-                    onPause: function onStart() {
-                        console.info('onPause callback');
-                    },
-                    onResume: function onStart() {
-                        console.info('onResume callback');
-                    },
-                }
-            },
-            constraints = {
-                audio: true,
-                video: true
-            };
-
-        function handleGetStreamSuccess(stream) {
-            console.log(stream.getTracks())
-            var videoEl = document.querySelector('.j-video');
-
-            recorder = new qbMediaRecorder(stream, recorderOpts);
-            
-            videoEl.src = URL.createObjectURL(stream);
-            videoEl.play();
-       }
-
-        function handleGetStreamError(error) {
-            console.error(error.name + ': ' + error.message, error);
-        }
-
-        // navigator.mediaDevices.enumerateDevices()
-        // .then(function(devices) {
-        //     devices.forEach(function(device) {
-        //         console.info(device.kind + ": " + device.label + " id = " + device.deviceId);
-        //     });
-        // });
-
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(handleGetStreamSuccess)
-            .catch(handleGetStreamError);
-
-        /** Event listeners */
-        document.querySelector('.j-start').addEventListener('click', function() {
-            recorder.start();
-        });
-
-        document.querySelector('.j-stop').addEventListener('click', function() {
-            recorder.stop();
-        });
-
-        document.querySelector('.j-pause').addEventListener('click', function() {
-            recorder.pause();
-        });
-
-        document.querySelector('.j-resume').addEventListener('click', function() {
-            recorder.resume();
-        });
-
-        document.querySelector('.j-download').addEventListener('click', function() {
-            recorder.download();
-        });
-    </script>
+    <script src="main.js"></script>
 </body>
 </html>

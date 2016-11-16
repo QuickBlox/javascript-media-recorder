@@ -1,5 +1,4 @@
 /* JSHint inline rules */
-
 /* jshint node: true, browser: true */ 
 
 'use strict';
