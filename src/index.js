@@ -45,7 +45,7 @@ function qbMediaRecorder(stream, opts) {
         throw new Error(ERRORS.unsupport);
     }
 
-    self._stream;
+    self._stream = null;
     
     self._mediaRecorder = null;
     self._recordedChunks = [];
@@ -59,12 +59,6 @@ function qbMediaRecorder(stream, opts) {
     if(prefferedMimeType) {
         typeMediaRecorded = prefferedMimeType.toString().toLowerCase().indexOf('audio') === -1 ? 'video' : 'audio';
     }
-
-    /** prepare a stream */
-    // if(typeMediaRecorded === 'audio') {
-    //     self._stream = new window.MediaStream();
-    //     self._stream.addTrack(stream.getAudioTracks()[0]);
-    // }
 
     self._options = {
         mimeType: qbMediaRecorder.getSupportedMimeTypes(typeMediaRecorded, prefferedMimeType)[0],
@@ -122,6 +116,10 @@ qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
     return qbMediaRecorder._mimeTypes[typeMedia].filter(function(mimeType) {
         return window.MediaRecorder.isTypeSupported(mimeType);
     });
+};
+
+qbMediaRecorder.prototype.getState = function() {
+    return this._mediaRecorder.state;
 };
 
 /**

@@ -3,26 +3,34 @@
 /* globals qbMediaRecorder, Promise */
 
 'use strict';
-// var mediaEl = document.querySelector('.j-video_local');
 
 var streamCard = {
     stream: null,
     mediaEl: null,
     recorder: null,
     typeStream: null, // 1 - audio only, 2 - audion & video
-    isRecording: false,
-    init: function() {
+    init: function(Rec, recOpts) {
         var self = this;
 
+        self.typeStream =  self.getChoosesTypeMedia();
+        self.mediaEl = document.querySelector('.j-video_local');
+
+        var recOpts = {
+            mimeType: self.typeStream === 2 ? 'video' : 'audio',
+            callbacks: {
+                onStart: function startRecord() {
+                    console.info('onStart');
+                }
+            }
+        };
+
         return new Promise(function(resolve, reject) {
-            self.typeStream =  self.getChoosesTypeMedia();
-            self.mediaEl = document.querySelector('.j-video_local');
-
-            self.setupListeners();
-
             self.getMediaStreamLocal().then(function(stream) {
                 self.stream = stream;
-                resolve(stream);
+                self.recorder = new qbMediaRecorder(stream, recOpts);
+
+                self.setupListeners();
+                resolve();
             }).catch(function(error) {
                 reject(error);
             });
@@ -31,19 +39,17 @@ var streamCard = {
     },
     getChoosesTypeMedia: function() {
         var radioButtons = document.getElementsByName('type');
-        
-        for (var i = 0; i < radioButtons.length; i++) {
-            if (radioButtons[i].checked) {
-                return radioButtons[i].value;
+
+        radioButtons.forEach(function(radioButton) {
+            if (radioButton.checked) {
+                return +radioButton.value;
             }
-        }
-        
-        return undefined;
+        });
     },
     getMediaStreamLocal: function() {
         var constraints = {
                 audio: true,
-                video: this.getChoosesTypeMedia() === '1' ? false : true
+                video: this.typeStream === '1' ? false : true
             };
 
         return new Promise(function(resolve, reject) {
@@ -57,17 +63,42 @@ var streamCard = {
         });
     },
     attachStreamToSource: function() {
-        console.info(this.mediaEl);
         this.mediaEl.pause();
         this.mediaEl.src='';
 
         this.mediaEl.src = URL.createObjectURL(this.stream);
         this.mediaEl.play();
-    }
+    },
+    setupListeners: function() {
+        var self = this;
+
+        document.querySelector('.j-start').addEventListener('click', function() {
+            console.log('assadas');
+            // recorder.start();
+        });
+
+        // document.querySelector('.j-stop').addEventListener('click', function() {
+        //     recorder.stop();
+        // });
+
+        // document.querySelector('.j-pause').addEventListener('click', function() {
+        //     recorder.pause();
+        // });
+
+        // document.querySelector('.j-resume').addEventListener('click', function() {
+        //     recorder.resume();
+        // });
+
+        // document.querySelector('.j-download').addEventListener('click', function() {
+        //     recorder.download();
+        // });
+    },
 };
 
-streamCard.init().then(function() {
+
+streamCard.init(qbMediaRecorder).then(function() {
     streamCard.attachStreamToSource();
+
 });
 
 
@@ -153,22 +184,3 @@ streamCard.init().then(function() {
         
 
 //        //  /** Event listeners */
-//        //  document.querySelector('.j-start').addEventListener('click', function() {
-//        //      recorder.start();
-//        //  });
-
-//        //  document.querySelector('.j-stop').addEventListener('click', function() {
-//        //      recorder.stop();
-//        //  });
-
-//        //  document.querySelector('.j-pause').addEventListener('click', function() {
-//        //      recorder.pause();
-//        //  });
-
-//        //  document.querySelector('.j-resume').addEventListener('click', function() {
-//        //      recorder.resume();
-//        //  });
-
-//        //  document.querySelector('.j-download').addEventListener('click', function() {
-//        //      recorder.download();
-//        //  });
