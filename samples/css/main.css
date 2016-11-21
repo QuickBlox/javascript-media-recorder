@@ -19,6 +19,7 @@ body {
 
 .wrap {
     width: 80%;
+    max-width: 890px;
     margin: 0 auto;
 }
 
@@ -56,73 +57,8 @@ body {
 
 }
 
-
-/*body {
-  font: 300 16px/1.1 'Roboto', sans-serif;
+.card--title {
+    margin: 0;
+    line-height: 1.8rem;
+    padding: .3rem 2rem;
 }
-
-a {
-    text-decoration: none;
-    color: #337ab7;
-}
-
-a:hover {
-    color: #23527c;
-}
-
-.wrap {
-    width: 90%;
-    margin: 0 auto;
-}
-
-
-
-.title_sub {
-    font-size: .65em;
-    font-weight: 300;
-    color: #757575;
-}
-
-.note {
-    position: relative;
-    margin: .5em .5em .5em 1em;
-
-    color: #757575;
-}
-
-.note:before {
-    content: "!";
-
-    position: absolute;
-    top: 0;
-    left: -1em;
-
-    color: #5484bd;
-    font-weight: 900;
-}
-
-.footer {
-    padding: 1em 5%;
-    background: #f2f2f2;
-}
-
-/* App */
-/*.app {
-    margin: 1em 0;
-}
-
-.video {
-    display: block;
-    width: 400px;
-    height: 300px;
-
-    background: #e0e0e0;
-}
-
-.actions {
-    margin: .5em 0;
-}
-
-.action_item {
-    margin: .25em;
-}*/*/

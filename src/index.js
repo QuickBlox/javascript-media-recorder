@@ -37,6 +37,12 @@ var ERRORS = require('./errors');
  *         }
  *     }
  * }
+ *
+ * var rec = new qbMediaRecorder(stream, opts);
+ *
+ * rec.start()
+ * // ...
+ * rec.stop();
  */
 function qbMediaRecorder(stream, opts) {
     var self = this;
@@ -45,9 +51,13 @@ function qbMediaRecorder(stream, opts) {
         throw new Error(ERRORS.unsupport);
     }
 
-    self._stream = null;
-    
+    if(!stream) {
+        throw new Error(ERRORS.streamRequired);
+    }
+
+    self._stream = stream;
     self._mediaRecorder = null;
+
     self._recordedChunks = [];
 
     self._timeSlice = opts && opts.timeSlice ? opts.timeSlice : 1000;
@@ -118,8 +128,13 @@ qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
     });
 };
 
+/**
+ * Return a [state of recording](https://w3c.github.io/mediacapture-record/MediaRecorder.html#idl-def-recordingstate).
+ * Possibly states: **inactive**, **recording**, **paused**
+ * @return {String} Name of a state.
+ */
 qbMediaRecorder.prototype.getState = function() {
-    return this._mediaRecorder.state;
+    return this._mediaRecorder ? this._mediaRecorder.state : 'inactive';
 };
 
 /**
@@ -137,6 +152,12 @@ qbMediaRecorder.prototype.start = function() {
                 console.error('Founded an error in callback:' + name, e);
             }
         }
+    }
+
+    var mediaRecorderState = self.getState();
+
+    if(mediaRecorderState === 'recording' || mediaRecorderState === 'paused'){
+        self._mediaRecorder.stop();
     }
 
     /* Clear data from previously recording */ 
@@ -256,15 +277,6 @@ qbMediaRecorder.prototype.resume = function() {
 };
 
 /**
- * Return a [state of recording](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/state).
- * Possibly, inactive / paused / recording 
- * @return {String} A state of recording. 
- */
-qbMediaRecorder.prototype.getState = function() {
-    return this._mediaRecorder.state;
-};
-
-/**
  * Create a file from blob and download as the file. Its method will fire 'stop' if recording in progress.
  * @param  {Strint} fileName Name of file. You can set `false` and we are generate name of file based on Date.now()
  * @param  {Blob}   blob     You can set blob which you get from the method `stop` or don't set anything and
@@ -334,7 +346,5 @@ qbMediaRecorder.prototype._getExtension = function() {
 
     return extension;
 };
-
-
 
 module.exports = qbMediaRecorder;
