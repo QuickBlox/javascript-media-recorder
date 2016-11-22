@@ -5,11 +5,16 @@
 'use strict';
 
 var resultCard = {
+    blob: null,
     ui: {
         wrap: document.querySelector('.j-result-card'),
         video: document.querySelector('.j-video_result'),
         clear: document.querySelector('.j-clear'),
         download: document.querySelector('.j-download')
+    },
+    toggleBtn: function(state) {
+        this.ui.clear.disabled = state;
+        this.ui.download.disabled = state;
     },
     attachVideo: function(blob) {
         this.ui.video.src = URL.createObjectURL(blob);
@@ -18,6 +23,7 @@ var resultCard = {
         this.ui.download.disabled = false;
     },
     detachVideo: function() {
+        this.blob = null;
         this.ui.video.src = '';
 
         this.ui.clear.disabled = true;
@@ -43,21 +49,19 @@ var resultCard = {
 
 var streamCard = {
     stream: null,
-    mediaEl: null,
-    recorder: null,
-    typeStream: null, // 1 - audio only, 2 - audion & video
     ui: {
+        wrap: document.querySelector('.j-card'),
         start: document.querySelector('.j-start'),
         stop: document.querySelector('.j-stop'),
         pause: document.querySelector('.j-pause'),
         resume: document.querySelector('.j-resume'),
         video: document.querySelector('.j-video_local'),
-        typesOfMedia: document.getElementsByName('type')
+        typesMedia: document.getElementsByName('type')
     },
     getChoosesTypeMedia: function() {
-        var typeMedia;
+        var typeMedia; // 1 - audio only, 2 - audion & video
 
-        this.ui.typesOfMedia.forEach(function(rBtn) {
+        this.ui.typesMedia.forEach(function(rBtn) {
             if (rBtn.checked) {
                 typeMedia = +rBtn.value;
             }
@@ -68,7 +72,7 @@ var streamCard = {
     getMediaStream: function() {
         var constraints = {
             audio: true,
-            video: this.typeStream === 1 ? false : true
+            video: this.getChoosesTypeMedia() === 1 ? false : true
         };
 
         return new Promise(function(resolve, reject) {
@@ -81,145 +85,164 @@ var streamCard = {
                 });
         });
     },
-    init: function() {
-        this.typeStream =  this.getChoosesTypeMedia();
+    attachStreamToSource: function() {
+        this.ui.video.pause();
+        this.ui.video.src='';
 
-        this.getMediaStream().then(function(stream) {
-            self.stream = stream;
+        this.ui.video.src = URL.createObjectURL(this.stream);
+        this.ui.video.play();
+    },
+    init: function() {
+        var self = this;
+
+        return new Promise(function(resolve, reject) {
+            self.getMediaStream().then(function(stream) {
+                if(self.stream) {
+                    self.stream.getTracks().forEach(function (track) {
+                        track.stop();
+                    });
+
+                    self.stream = null;
+                }
+
+                self.stream = stream;
+
+                self.attachStreamToSource();
+                resolve(stream);
+            });
         });
+    },
+    setupListeners: function(rec) {
+        var self = this;
+
+        var evStart = new CustomEvent('starting');
+        var evStop = new CustomEvent('stopped');
+        var evPause = new CustomEvent('paused');
+        var evResume = new CustomEvent('resumed');
+        
+
+        self.ui.start.addEventListener('click', function() {
+            self.ui.start.disabled = true;
+            self.ui.resume.disabled = true;
+
+            self.ui.stop.disabled = false;
+            self.ui.pause.disabled = false;
+
+            self.ui.wrap.dispatchEvent(evStart);
+        });
+
+        self.ui.stop.addEventListener('click', function() {
+            self.ui.start.disabled = false;
+
+            self.ui.stop.disabled = true;
+            self.ui.pause.disabled = true;
+            self.ui.resume.disabled = true;
+
+            self.ui.wrap.dispatchEvent(evStop);
+        });
+
+        self.ui.pause.addEventListener('click', function() {
+            self.ui.start.disabled = true;
+            self.ui.pause.disabled = true;
+
+            self.ui.resume.disabled = false;
+            self.ui.stop.disabled = false;
+
+            self.ui.wrap.dispatchEvent(evPause);
+        });
+
+        self.ui.resume.addEventListener('click', function() {
+            self.ui.start.disabled = true;
+            self.ui.resume.disabled = true;
+
+            self.ui.pause.disabled = false;
+            self.ui.stop.disabled = false;
+
+            self.ui.wrap.dispatchEvent(evResume);
+        });
+
+        function handleMediaTypesChanged() {
+            self.init().then(function(stream) {
+                var evChangeTypes = new CustomEvent('changedTypes', {
+                    'detail': {
+                        'stream': stream
+                    }
+                });
+
+                self.ui.start.disabled = false;
+                self.ui.pause.disabled = true;
+                self.ui.resume.disabled = true;
+                self.ui.stop.disabled = true;
+
+                self.ui.wrap.dispatchEvent(evChangeTypes);
+            });
+        }
+        
+        for (var i = 0; i < self.ui.typesMedia.length; i++) {
+            self.ui.typesMedia[i].addEventListener('change', handleMediaTypesChanged);
+        }
     }
 };
 
-console.log(streamCard.getChoosesTypeMedia());
+var rec;
 
+streamCard.init().then(function(stream) {
+    var opts = {
+        callbacks: {
+            onStart: function onStartRecording() {
+                console.info('Starting record');
+            },
+            onStop: function onStoppedRecording(blob) {
+                resultCard.blob = blob;
+                resultCard.attachVideo(blob);
+            }
+        }
+    };
 
+    streamCard.setupListeners();
+    resultCard.setupListeners();
 
-/** Start fun */
-resultCard.setupListeners();
+    opts.mimeType = streamCard.getChoosesTypeMedia() === 1 ? 'audio' : 'video';
+    rec = new qbMediaRecorder(stream, opts);
 
-/** Remove recorded media */
-resultCard.ui.wrap.addEventListener('clear', function() {
-    console.info('CLEAR');
-}, false);
+    streamCard.ui.wrap.addEventListener('starting', function() {
+        rec.start();
+    }, false);
 
-/** Download recorded media */
-resultCard.ui.wrap.addEventListener('clear', function() {
-    console.info('CLEAR');
-}, false);
+    streamCard.ui.wrap.addEventListener('stopped', function() {
+        rec.stop();
 
+        resultCard.toggleBtn(false);
+    }, false);
 
+    streamCard.ui.wrap.addEventListener('paused', function() {
+        rec.pause();
+    }, false);
 
+    streamCard.ui.wrap.addEventListener('resumed', function() {
+        rec.resume();
+    }, false);
 
-//     getMediaStreamLocal: function() {
-//         
-//     },
-//     init: function() {
-//         var self = this;
+    streamCard.ui.wrap.addEventListener('changedTypes', function(e) {
+        rec.stop();
+        console.log('AFTERONSTOP');
+        resultCard.toggleBtn(true);
+        resultCard.detachVideo();
 
-//         
+        opts.mimeType = streamCard.getChoosesTypeMedia() === 1 ? 'audio' : 'video';
+        rec = new qbMediaRecorder(e.detail.stream, opts);
+    }, false);
 
-//         return new Promise(function(resolve, reject) {
-//             self.getMediaStreamLocal().then(function(stream) {
-//                 self.stream = stream;
-//                 self.recorder = new qbMediaRecorder(stream, recOpts);
+    /** Remove recorded media */
+    resultCard.ui.wrap.addEventListener('clear', function() {
+        resultCard.detachVideo();
+    }, false);
 
-//                 self.setupListeners();
-//                 resolve();
-//             }).catch(function(error) {
-//                 reject(error);
-//             });
-//         });
-//     },
-//     attachStreamToSource: function() {
-//         this.mediaEl.pause();
-//         this.mediaEl.src='';
+    /** Download recorded media */
+    resultCard.ui.wrap.addEventListener('download', function() {
+        rec.download(null, resultCard.blob);
+    }, false);
+}).catch(function() {
+    console.error('Cannot got a stream');
+});
 
-//         this.mediaEl.src = URL.createObjectURL(this.stream);
-//         this.mediaEl.play();
-//     },
-//     setupListeners: function() {
-//         var self = this;
-
-//         var radioButtons = document.getElementsByName('type');
-
-        // for (var i = 0; i < radioButtons.length; i++) {
-        //     radioButtons[i].addEventListener('change', function() {
-        //         self.typeStream = self.getChoosesTypeMedia();
-        //         self.stream = null;
-        //         self.recorder.stop();
-
-        //         self.getMediaStreamLocal().then(function(stream) {
-        //             self.stream = stream;
-        //             self.recorder = new qbMediaRecorder(stream, recOpts);
-
-        //             self.ui.btnStart.disabled = true;
-        //             self.ui.btnStop.disabled = false;
-        //             self.ui.btnPause.disabled = false;
-        //             self.ui.btnResume.disabled = false;
-
-        //         }).catch(function(error) {
-        //             console.error(error);
-        //         });
-        //     }, false);
-        // }
-
-        // self.ui.btnStart.addEventListener('click', function() {
-        //     self.recorder.start();
-
-        //     self.ui.btnStop.disabled = false;
-        //     self.ui.btnPause.disabled = false;
-        // });
-
-        // self.ui.btnPause.addEventListener('click', function() {
-        //     self.recorder.pause();
-
-        //     self.ui.btnPause.disabled = true;
-        //     self.ui.btnResume.disabled = false;
-        // });
-
-        // self.ui.btnResume.addEventListener('click', function() {
-        //     self.recorder.resume();
-
-        //     self.ui.btnResume.disabled = true;
-        //     self.ui.btnPause.disabled = false;
-        // });
-
-        // self.ui.btnStop.addEventListener('click', function() {
-        //     self.recorder.stop();
-
-        //     self.ui.btnStop.disabled = false;
-        //     self.ui.btnPause.disabled = false;
-        //     self.ui.btnResume.disabled = false;
-        // });
-//     },
-// };
-
-
-// streamCard.init().then(function() {
-//     streamCard.attachStreamToSource();
-
-//     resultCard.setupListeners(streamCard.recorder);
-// });
-
-// var recOpts = {
-//     mimeType: streamCard.typeStream === 2 ? 'video' : 'audio',
-//     callbacks: {
-//         onStart: function startRecord() {
-//             console.info('onStart');
-//         },
-//         onError: function errorRecord(error) {
-//             console.info('onError', error);
-//         },
-//         onPause: function pauseRecord() {
-//             console.info('onPause');
-//         },
-//         onStop: function stopRecord(blob) {
-//             console.info('onStop');
-
-//             resultCard.attachVideo(blob);
-//         },
-//         onResume: function resimeRecord() {
-//             console.info('onResume');
-//         }
-//     }
-// };

@@ -241,7 +241,7 @@ qbMediaRecorder.prototype.start = function() {
  */
 qbMediaRecorder.prototype.stop = function() {
     var mediaRecorder = this._mediaRecorder,
-        mediaRecorderState = mediaRecorder.state;
+        mediaRecorderState = mediaRecorder && mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
     if(mediaRecorder && mediaRecorderState === 'recording'){
         mediaRecorder.stop();
@@ -286,7 +286,7 @@ qbMediaRecorder.prototype.download = function(fileName, blob) {
     var self = this;
 
     var mediaRecorder = this._mediaRecorder,
-        mediaRecorderState = mediaRecorder.state;
+        mediaRecorderState = mediaRecorder && mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
     if(mediaRecorder && mediaRecorderState === 'recording') {
         mediaRecorder.stop();
