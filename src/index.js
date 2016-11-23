@@ -51,10 +51,6 @@ function qbMediaRecorder(stream, opts) {
         throw new Error(ERRORS.unsupport);
     }
 
-    if(!stream) {
-        throw new Error(ERRORS.streamRequired);
-    }
-
     self._stream = stream;
     self._mediaRecorder = null;
 
@@ -138,10 +134,15 @@ qbMediaRecorder.prototype.getState = function() {
 };
 
 /**
+ * 
+ * 
+ */
+/**
  * Start to recording a stream.
  * Fire the method `stop` if record has state `inprogress`.
+ * @param  {MediaStream} stream object representing a flux of audio- or video-related data.
  */
-qbMediaRecorder.prototype.start = function() {
+qbMediaRecorder.prototype.start = function(stream) {
     var self = this;
 
     function fireCallback(name, args) {
@@ -158,6 +159,11 @@ qbMediaRecorder.prototype.start = function() {
 
     if(mediaRecorderState === 'recording' || mediaRecorderState === 'paused'){
         self._mediaRecorder.stop();
+    }
+
+    if(stream) {
+        self._stream.length = 0;
+        self._stream = stream;
     }
 
     /* Clear data from previously recording */ 

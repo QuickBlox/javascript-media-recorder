@@ -22,7 +22,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="qbMediaRecorder.html">qbMediaRecorder</a><ul class='methods'><li data-type='method'><a href="qbMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="qbMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#start">start</a></li><li data-type='method'><a href="qbMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="qbMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="qbMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#download">download</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="qbMediaRecorder.html">qbMediaRecorder</a><ul class='methods'><li data-type='method'><a href="qbMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="qbMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#start">start</a></li><li data-type='method'><a href="qbMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="qbMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="qbMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="qbMediaRecorder.html#download">download</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -76,6 +76,12 @@ var ERRORS = require('./errors');
  *         }
  *     }
  * }
+ *
+ * var rec = new qbMediaRecorder(stream, opts);
+ *
+ * rec.start()
+ * // ...
+ * rec.stop();
  */
 function qbMediaRecorder(stream, opts) {
     var self = this;
@@ -84,9 +90,9 @@ function qbMediaRecorder(stream, opts) {
         throw new Error(ERRORS.unsupport);
     }
 
-    self._stream = null;
-    
+    self._stream = stream;
     self._mediaRecorder = null;
+
     self._recordedChunks = [];
 
     self._timeSlice = opts &amp;&amp; opts.timeSlice ? opts.timeSlice : 1000;
@@ -163,14 +169,19 @@ qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
  * @return {String} Name of a state.
  */
 qbMediaRecorder.prototype.getState = function() {
-    return this._mediaRecorder.state;
+    return this._mediaRecorder ? this._mediaRecorder.state : 'inactive';
 };
 
 /**
+ * 
+ * 
+ */
+/**
  * Start to recording a stream.
  * Fire the method `stop` if record has state `inprogress`.
+ * @param  {MediaStream} stream object representing a flux of audio- or video-related data.
  */
-qbMediaRecorder.prototype.start = function() {
+qbMediaRecorder.prototype.start = function(stream) {
     var self = this;
 
     function fireCallback(name, args) {
@@ -181,6 +192,17 @@ qbMediaRecorder.prototype.start = function() {
                 console.error('Founded an error in callback:' + name, e);
             }
         }
+    }
+
+    var mediaRecorderState = self.getState();
+
+    if(mediaRecorderState === 'recording' || mediaRecorderState === 'paused'){
+        self._mediaRecorder.stop();
+    }
+
+    if(stream) {
+        self._stream.length = 0;
+        self._stream = stream;
     }
 
     /* Clear data from previously recording */ 
@@ -264,7 +286,7 @@ qbMediaRecorder.prototype.start = function() {
  */
 qbMediaRecorder.prototype.stop = function() {
     var mediaRecorder = this._mediaRecorder,
-        mediaRecorderState = mediaRecorder.state;
+        mediaRecorderState = mediaRecorder &amp;&amp; mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
     if(mediaRecorder &amp;&amp; mediaRecorderState === 'recording'){
         mediaRecorder.stop();
@@ -300,15 +322,6 @@ qbMediaRecorder.prototype.resume = function() {
 };
 
 /**
- * Return a [state of recording](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/state).
- * Possibly, inactive / paused / recording 
- * @return {String} A state of recording. 
- */
-qbMediaRecorder.prototype.getState = function() {
-    return this._mediaRecorder.state;
-};
-
-/**
  * Create a file from blob and download as the file. Its method will fire 'stop' if recording in progress.
  * @param  {Strint} fileName Name of file. You can set `false` and we are generate name of file based on Date.now()
  * @param  {Blob}   blob     You can set blob which you get from the method `stop` or don't set anything and
@@ -318,7 +331,7 @@ qbMediaRecorder.prototype.download = function(fileName, blob) {
     var self = this;
 
     var mediaRecorder = this._mediaRecorder,
-        mediaRecorderState = mediaRecorder.state;
+        mediaRecorderState = mediaRecorder &amp;&amp; mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
     if(mediaRecorder &amp;&amp; mediaRecorderState === 'recording') {
         mediaRecorder.stop();
@@ -379,8 +392,6 @@ qbMediaRecorder.prototype._getExtension = function() {
     return extension;
 };
 
-
-
 module.exports = qbMediaRecorder;
 </code></pre>
         </article>
@@ -395,7 +406,7 @@ module.exports = qbMediaRecorder;
 
 <footer>
     <p>Made by QB with love.</p>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Mon Nov 21 2016 11:00:52 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Nov 23 2016 17:29:56 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
