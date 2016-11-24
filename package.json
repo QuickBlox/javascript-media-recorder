@@ -7,7 +7,8 @@
     "setDevDependenciesGlobally": "npm i -g browserify",
     "generate-docs": "node_modules/.bin/jsdoc -c .jsdoc.json",
     "develop": "gulp develop",
-    "build": "gulp && gulp compress && npm run generate-docs"
+    "build": "gulp && gulp compress && npm run generate-docs",
+    "connect": "gulp connect"
   },
   "repository": {
     "type": "git",
