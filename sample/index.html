@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Media Stream Recorder by Quickblox</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="icon" href="https://docsdev.quickblox.com/themes/quickblox/templates/main_resources/favicon.ico">
+
+    <link rel="stylesheet" href="css/spectre.min.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div class="content">
+        <header class="title wrap">
+            <h1 class="title_main text-center">Media Stream Recorder
+                <span class="title_sub">by&nbsp;Quickblox</span>
+            </h1>
+        </header>
+
+        <aside class="toast wrap">
+            <p>This demo requires Firefox&nbsp;49, Chrome&nbsp;49, Chrome&nbsp;for&nbsp;Android&nbsp;53, Opera&nbsp;41 or&nbsp;later.</p>
+        </aside>
+
+        <main>
+            <div class="columns wrap">
+                <div class="column col-6 col-xs-12">
+                    <div class="card j-card">
+                        <div class="card-header">
+                            <div class="btn-group btn-group-block">
+                                <label class="form-radio">
+                                    <input type="radio" name="type" value="1">
+                                    <i class="form-icon"></i> Audio only
+                                </label>
+
+                                <label class="form-radio">
+                                    <input type="radio" name="type" value="2" checked>
+                                    <i class="form-icon"></i> Audio & Video
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="card-image">
+                            <div class="video-responsive j-media-wrap">
+                                <!-- <audio class="j-video_local" controls></audio> -->
+                                <video class=" j-video_local video" controls muted></video>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <h5 class="card-title">Recording</h5>
+                            <div class="btn-group btn-group-block">
+                                <button class="btn j-start">Start</button>
+                                <button class="btn j-pause" disabled>Pause</button>
+                                <button class="btn j-resume" disabled>Resume</button>
+                                <button class="btn j-stop" disabled>Stop</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column col-6 col-xs-12">
+                    <div class="card j-result-card">
+                        <div class="card-header">
+                            <p class="card--title">Result</p>
+                        </div>
+                        
+                        <div class="card-image">
+                            <div class="video-responsive">
+                                <video class="j-video_result video" controls></video>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <h5 class="card-title">Record</h5>
+                            <div class="btn-group btn-group-block">
+                                <button class="btn j-clear" disabled>Clear</button>
+                                <button class="btn j-download" disabled>Download</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <p class="lead ">
+            See <a href="../docs/index.html" target="_blank">docs</a> and <a href="https://github.com/QuickBlox/javascript-media-recorder/tree/master/samples" target="_blank">source&nbsp;code</a>
+        </p>
+    </footer>
+    
+    <script src="../mediaRecorder.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

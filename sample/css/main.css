@@ -1,0 +1,64 @@
+html {
+    overflow-y: scroll;
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-wrap {
+    background-color: #efefef;
+}
+
+.content {
+    flex: 1;
+}
+
+.wrap {
+    width: 80%;
+    max-width: 890px;
+    margin: 0 auto;
+}
+
+.title_main {
+    font-weight: 700;
+}
+
+.title_sub {
+    font-size: .6em;
+    font-weight: 300;
+}
+
+.video {
+    background-color: #efefef;
+}
+
+.video-responsive .video {
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+.footer {
+    padding: 1em 0;
+
+    background: #efefef;
+    text-align: center;
+}
+
+.footer_desc {
+    width: 80%;
+    margin: 0 auto;
+
+}
+
+.card--title {
+    margin: 0;
+    line-height: 1.8rem;
+    padding: .3rem 2rem;
+}

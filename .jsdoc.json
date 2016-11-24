@@ -1,0 +1,23 @@
+{
+    "source": {
+        "include": ["src", "README.md"],
+        "includePattern": ".js$",
+        "excludePattern": "(node_modules/|docs)"
+    },
+    "plugins": [
+        "plugins/markdown"
+    ],
+    "markdown": {
+        "parser": "gfm",
+        "hardwrap": true
+    },
+    "opts": {
+        "encoding": "utf8",
+        "destination": "./docs/",
+        "template": "node_modules/docdash",
+        "recurse": true
+    },
+    "docdash": {
+        "sort": false
+    }
+}
