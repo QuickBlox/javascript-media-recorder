@@ -4,7 +4,6 @@
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
   "scripts": {
-    "setDevDependenciesGlobally": "npm i -g browserify",
     "generate-docs": "node_modules/.bin/jsdoc -c .jsdoc.json",
     "develop": "gulp develop",
     "build": "gulp && gulp compress && npm run generate-docs",
