@@ -1,48 +1,21 @@
-/* JSHint inline rules */
-/* jshint node: true, browser: true */ 
-
 'use strict';
 
 var ERRORS = require('./errors');
 
 /**  
  * @constructor qbMediaRecorder
- * @param  {mediaStream} stream object representing a flux of audio- or video-related data.
- * @param  {object} opts        see example
- *
- * @example
- * opts = {
- *     mimeType: 'audio',       // set mime type of record media or only type of media: 'video'/'audio'.
- *     ignoreMutedMedia: false, // What to do with a muted input MediaStreamTrack,
- *                              // e.g. insert black frames/zero audio volume in the recording or ignore altogether.
- *                              // By default is `true`.
- *     timeSlice: 1000,         // optionally be passed a timeslice argument with a value in milliseconds.
- *                              // the media will be captured in separate chunks of that duration,
- *                              // rather than the default behavior of recording the media in a single large chunk.
- *     callbacks: {             // Note! Use named function for better debug.
- *         onStart: function startRecord() {
- *             //...
- *         },
- *         onError: function errorRecord(error) {
- *             //...
- *         },
- *         onPause: function pauseRecord() {
- *             //...
- *         },
- *         onStop: function stopRecord(blob) {
- *             //...
- *         },
- *         onResume: function resimeRecord() {
- *             //...
- *         }
- *     }
- * }
- *
- * var rec = new qbMediaRecorder(stream, opts);
- *
- * rec.start()
- * // ...
- * rec.stop();
+ * @param {Object} [stream] - Stream object representing a flux of audio- or video-related data. You can set a stream when will call the start method.
+ * @param {Object} [opts] - Object of parameters.
+ * @param {String} [opts.mimeType = 'video'] - Set mime type of record media or only type of media: 'video'/'audio'. By default if 'video'
+ * @param {Number} [opts.timeSlice = 1000] - A timeslice argument with a value in milliseconds (fire 'ondataavaible' callback).
+ * @param {Boolean} [opts.ignoreMutedMedia = true] - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
+ * @param {Object} [opts.callbacks] - Object of callbacks.
+ * @param {Function} [opts.callbacks.onStart] - Callback when recording is started.
+ * @param {Function} [opts.callbacks.onError] - Callback when recording is failed.
+ * @param {Function} [opts.callbacks.onPause] - Callback when recording is paused.
+ * @param {Function} [opts.callbacks.onResume] - Callback when recording is stoped.
+ * @param {Function} [opts.callbacks.onStop] - Callback when recording is stoped.
+ * @param {Function} [opts.callbacks.ondataavailable] - Slice a blob by timeSlice and return event object.
  */
 function qbMediaRecorder(stream, opts) {
     var self = this;
@@ -83,7 +56,7 @@ qbMediaRecorder.isAvailable = function(){
 /**
  * @access private
  * 
- * All available mime types in browser environment.
+ * All available mime types in a browser environment.
  * @type {Object}
  */
 qbMediaRecorder._mimeTypes = {
@@ -111,9 +84,7 @@ qbMediaRecorder._mimeTypes = {
  * @return {array}                     Array of supported mimetypes.
  */
 qbMediaRecorder.getSupportedMimeTypes = function(prefferedTypeMedia) {
-    var self = this,
-        supportedMimeType = [],
-        typeMedia = prefferedTypeMedia || 'video';
+    var typeMedia = prefferedTypeMedia || 'video';
 
     if(!qbMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
@@ -134,13 +105,10 @@ qbMediaRecorder.prototype.getState = function() {
 };
 
 /**
- * 
- * 
- */
-/**
  * Start to recording a stream.
  * Fire the method `stop` if record has state `inprogress`.
- * @param  {MediaStream} stream object representing a flux of audio- or video-related data.
+ * @param {Object} [stream] - Stream object representing a flux of audio- or video-related data. Or you can set a stream when init a qbMediaRecorder.
+ * @returns {void}
  */
 qbMediaRecorder.prototype.start = function(stream) {
     var self = this;
@@ -173,14 +141,15 @@ qbMediaRecorder.prototype.start = function(stream) {
     try {
         self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
     } catch(e) {
-        console.info(ERRORS.unsupportMediaRecorderWithOptions, e);
+        console.warn(ERRORS.unsupportMediaRecorderWithOptions, e);
 
         self._mediaRecorder = new window.MediaRecorder(self._stream);
     }
 
     self._mediaRecorder.ondataavailable = function(e) {
-        if (e.data && e.data.size > 0) {
-           self._recordedChunks.push(e.data);
+        if(e.data && e.data.size > 0) {
+            self._recordedChunks.push(e.data);
+            fireCallback('ondataavailable', e);
         }
     };
 
@@ -228,7 +197,7 @@ qbMediaRecorder.prototype.start = function(stream) {
         }
     };
 
-    self._mediaRecorder.onstop = function(e) {
+    self._mediaRecorder.onstop = function() {
         var blob = new Blob(self._recordedChunks, {
             'type' : self._options.mimeType
         });
@@ -258,6 +227,7 @@ qbMediaRecorder.prototype.stop = function() {
 
 /**
  * Pause to recording a stream.
+ * @returns {void}
  */
 qbMediaRecorder.prototype.pause = function() {
     var self = this;
@@ -271,6 +241,7 @@ qbMediaRecorder.prototype.pause = function() {
 
 /**
  * Resume to recording a stream.
+ * @returns {void}
  */
 qbMediaRecorder.prototype.resume = function() {
     var self = this;
@@ -284,9 +255,10 @@ qbMediaRecorder.prototype.resume = function() {
 
 /**
  * Create a file from blob and download as the file. Its method will fire 'stop' if recording in progress.
- * @param  {Strint} fileName Name of file. You can set `false` and we are generate name of file based on Date.now()
+ * @param  {Strint} fileName Name of file. You can set `false` and we are generate name of file based on Date.now().
  * @param  {Blob}   blob     You can set blob which you get from the method `stop` or don't set anything and
  *                           we will get recorded chuncks.
+ * @returns {void}
  */
 qbMediaRecorder.prototype.download = function(fileName, blob) {
     var self = this;
@@ -320,7 +292,8 @@ qbMediaRecorder.prototype.download = function(fileName, blob) {
 /**
  * Create a Blob from recorded chunks.
  * @access private
- * @return {Blob}
+ * @param {Object} [data] - Recorded data.
+ * @return {Object} - Blob of recorded media or what you set in data
  */
 qbMediaRecorder.prototype._getBlobRecorded = function(data) {
     var self = this,
@@ -335,7 +308,7 @@ qbMediaRecorder.prototype._getBlobRecorded = function(data) {
 };
 
 /**
- * Return a extension of a file. Based on avaible mimeType.
+ * Return a extension of a file. Based on available mimeType.
  * @access private
  * @return {String} For example, 'webm' / 'mp4' / 'ogg'
  */

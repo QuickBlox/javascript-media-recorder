@@ -1,9 +1,6 @@
-/* JSHint inline */ 
-/* jshint node: true */ 
-
 'use strict';
 
-var ERRORS ={
+var ERRORS = {
     'unsupport': 'qbMediaRecorder is not supported this environment.',
     'unsupportMediaRecorderWithOptions': 'Got a warning when creating a MediaRecorder, trying to create MediaRecorder without options.',
     'callbackError': 'Founded an error in callback:',

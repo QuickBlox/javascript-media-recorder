@@ -4,8 +4,25 @@
 
 'use strict';
 
+var notify = {
+    ui: document.querySelector('.j-notify'),
+    hide: function() {
+        this.ui.classList.remove('notify-active');
+    },
+    show: function(txt) {
+        var n = this;
+
+        n.ui.textContent = txt;
+        n.ui.classList.add('notify-active');
+
+        var timerId = setTimeout(function() {
+            n.hide();
+        }, 5000); 
+    }
+};
+
 var resultCard = {
-    blob: null,
+    blob: null, // saved a blob after stopped a record
     ui: {
         wrap: document.querySelector('.j-result-card'),
         video: document.querySelector('.j-video_result'),
@@ -58,6 +75,11 @@ var streamCard = {
         video: document.querySelector('.j-video_local'),
         typesMedia: document.getElementsByName('type')
     },
+    stopStreaming: function(stream) {
+        stream.getTracks().forEach(function(track) {
+            track.stop();
+        });
+    },
     getChoosesTypeMedia: function() {
         var typeMedia; // 1 - audio only, 2 - audion & video
 
@@ -70,14 +92,25 @@ var streamCard = {
         return typeMedia;
     },
     getMediaStream: function() {
+        var self = this;
+
         var constraints = {
-            audio: true,
-            video: this.getChoosesTypeMedia() === 1 ? false : true
+            audio: true, 
+            video: this.getChoosesTypeMedia() === 1 ? false : true // 1 - audio only, 2 - audion & video
         };
 
         return new Promise(function(resolve, reject) {
             navigator.mediaDevices.getUserMedia(constraints)
                 .then(function(stream) {
+                    if(constraints.video) {
+                        if(!stream.getVideoTracks().length) {
+                            self.stopStreaming(stream);
+                            reject({
+                                name: 'NoVideoInput'
+                            });
+                        }
+                    }
+
                     resolve(stream);
                 })
                 .catch(function(error) {
@@ -98,17 +131,17 @@ var streamCard = {
         return new Promise(function(resolve, reject) {
             self.getMediaStream().then(function(stream) {
                 if(self.stream) {
-                    self.stream.getTracks().forEach(function (track) {
-                        track.stop();
-                    });
+                    self.stopStreaming(self.stream);
 
                     self.stream = null;
                 }
 
                 self.stream = stream;
-
                 self.attachStreamToSource();
+
                 resolve(stream);
+            }, function(e) {
+                reject(e);
             });
         });
     },
@@ -195,6 +228,9 @@ streamCard.init().then(function(stream) {
             onStop: function onStoppedRecording(blob) {
                 resultCard.blob = blob;
                 resultCard.attachVideo(blob);
+            },
+            ondataavailable: function onDataAvaible(e) {
+                // console.info(e);
             }
         }
     };
@@ -242,7 +278,7 @@ streamCard.init().then(function(stream) {
     resultCard.ui.wrap.addEventListener('download', function() {
         rec.download(null, resultCard.blob);
     }, false);
-}).catch(function() {
-    console.error('Cannot got a stream');
+}).catch(function(e) {
+    notify.show(e.name);
 });
 
