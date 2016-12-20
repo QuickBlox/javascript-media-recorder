@@ -53,7 +53,7 @@
 
     
 
-    <h4 class="name" id="qbMediaRecorder"><span class="type-signature"></span>new qbMediaRecorder<span class="signature">(stream<span class="signature-attributes">opt</span>, opts<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="qbMediaRecorder"><span class="type-signature"></span>new qbMediaRecorder<span class="signature">(opts<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -137,39 +137,6 @@
     </thead>
 
     <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>stream</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"><p>Stream object representing a flux of audio- or video-related data. You can set a stream when will call the start method.</p></td>
-        </tr>
-
     
 
         <tr>
@@ -661,7 +628,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line62">line 62</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line54">line 54</a>
     </li></ul></dd>
     
 
@@ -740,7 +707,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line52">line 52</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line62">line 62</a>
     </li></ul></dd>
     
 
@@ -780,7 +747,7 @@
 
 
 <div class="description">
-    <p>Checking is environment supports recording.</p>
+    <p>It checks capability of recording in the environment.<br>Checks <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html#MediaRecorderAPI">MediaRecorder</a>,<br> <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html#dom-mediarecorder-istypesupported">MediaRecorder.isTypeSupported</a> and <a href="https://www.w3.org/TR/FileAPI/#dfn-Blob">Blob</a>.</p>
 </div>
 
 
@@ -846,7 +813,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line86">line 86</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line73">line 73</a>
     </li></ul></dd>
     
 
@@ -1001,7 +968,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line103">line 103</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line90">line 90</a>
     </li></ul></dd>
     
 
@@ -1107,7 +1074,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line113">line 113</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line190">line 190</a>
     </li></ul></dd>
     
 
@@ -1213,7 +1180,7 @@
 
             
 
-            <td class="description last"><p>Stream object representing a flux of audio- or video-related data. Or you can set a stream when init a qbMediaRecorder.</p></td>
+            <td class="description last"><p>Stream object representing a flux of audio- or video-related data.</p></td>
         </tr>
 
     
@@ -1270,7 +1237,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line217">line 217</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line238">line 238</a>
     </li></ul></dd>
     
 
@@ -1376,7 +1343,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line232">line 232</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line253">line 253</a>
     </li></ul></dd>
     
 
@@ -1478,7 +1445,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line246">line 246</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line267">line 267</a>
     </li></ul></dd>
     
 
@@ -1580,7 +1547,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line263">line 263</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line284">line 284</a>
     </li></ul></dd>
     
 
@@ -1756,7 +1723,7 @@
 
 <footer>
     <p>Made by QB with love.</p>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Dec 07 2016 19:11:54 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Dec 20 2016 19:05:55 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

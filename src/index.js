@@ -54,11 +54,12 @@ function qbMediaRecorder(opts) {
 qbMediaRecorder._mimeTypes = require('./mimeTypes');
 
 /**
- * It checks capability of recording in the current environment.
+ * It checks capability of recording in the environment.
+ * Checks [MediaRecorder](https://w3c.github.io/mediacapture-record/MediaRecorder.html#MediaRecorderAPI), [MediaRecorder.isTypeSupported](https://w3c.github.io/mediacapture-record/MediaRecorder.html#dom-mediarecorder-istypesupported) and [Blob](https://www.w3.org/TR/FileAPI/#dfn-Blob).
  * @return {Boolean} Returns true if the qbMediaRecorder is available and can run, or false otherwise.
  */
 qbMediaRecorder.isAvailable = function(){
-    return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function');
+    return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function' && window.Blob);
 };
 
 /**
