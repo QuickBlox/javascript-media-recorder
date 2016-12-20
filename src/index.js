@@ -2,32 +2,32 @@
 
 var ERRORS = require('./errors');
 
-/**  
+/**
  * @constructor qbMediaRecorder
- * @param {Object} [stream] - Stream object representing a flux of audio- or video-related data. You can set a stream when will call the start method.
- * @param {Object} [opts] - Object of parameters.
- * @param {String} [opts.mimeType = 'video'] - Set mime type of record media or only type of media: 'video'/'audio'. By default if 'video'
- * @param {Number} [opts.timeSlice = 1000] - A timeslice argument with a value in milliseconds (fire 'ondataavaible' callback).
- * @param {Boolean} [opts.ignoreMutedMedia = true] - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
- * @param {Object} [opts.callbacks] - Object of callbacks.
- * @param {Function} [opts.callbacks.onStart] - Callback when recording is started.
- * @param {Function} [opts.callbacks.onError] - Callback when recording is failed.
- * @param {Function} [opts.callbacks.onPause] - Callback when recording is paused.
- * @param {Function} [opts.callbacks.onResume] - Callback when recording is stoped.
- * @param {Function} [opts.callbacks.onStop] - Callback when recording is stoped.
- * @param {Function} [opts.callbacks.ondataavailable] - Slice a blob by timeSlice and return event object.
+ * @param {Object}  [opts] - Object of parameters.
+ * @param {String}      [opts.mimeType = 'video'] - Set mime type of record media or only type of media: 'video'/'audio'. By default if 'video'
+ * @param {Number}      [opts.timeSlice = 1000] - A timeslice argument with a value in milliseconds (fire 'ondataavaible' callback).
+ * @param {Boolean}     [opts.ignoreMutedMedia = true] - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
+ * @param {Object}      [opts.callbacks] - Object of callbacks.
+ * @param {Function}        [opts.callbacks.onStart] - Callback when recording is started.
+ * @param {Function}        [opts.callbacks.onError] - Callback when recording is failed.
+ * @param {Function}        [opts.callbacks.onPause] - Callback when recording is paused.
+ * @param {Function}        [opts.callbacks.onResume] - Callback when recording is stoped.
+ * @param {Function}        [opts.callbacks.onStop] - Callback when recording is stoped.
+ * @param {Function}        [opts.callbacks.ondataavailable] - Slice a blob by timeSlice and return event object.
  */
-function qbMediaRecorder(stream, opts) {
+function qbMediaRecorder(opts) {
     var self = this;
 
     if(!qbMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
     }
 
-    self._stream = stream;
+    self._stream = null;
     self._mediaRecorder = null;
-
     self._recordedChunks = [];
+    self._recordedBlobs = [];
+    self._keepRecording = false; // uses for method change(stream)
 
     self._timeSlice = opts && opts.timeSlice ? opts.timeSlice : 1000;
     self._userCallbacks = opts && opts.callbacks ? opts.callbacks : null; 
@@ -46,34 +46,19 @@ function qbMediaRecorder(stream, opts) {
 }
 
 /**
- * Checking is environment supports recording.
- * @return {Boolean} Returns true if the qbMediaRecorder is available and can run, or false otherwise.
- */
-qbMediaRecorder.isAvailable = function(){
-    return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function');
-};
-
-/**
  * @access private
  * 
  * All available mime types in a browser environment.
  * @type {Object}
  */
-qbMediaRecorder._mimeTypes = {
-    'audio': [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/ogg'
-    ],
-    'video': [
-        'video/webm;codecs=h264',
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=vp8',
-        'video/webm;codecs=daala',
-        'video/webm',
-        'video/mp4',
-        'video/mpeg'
-    ]
+qbMediaRecorder._mimeTypes = require('./mimeTypes');
+
+/**
+ * It checks capability of recording in the current environment.
+ * @return {Boolean} Returns true if the qbMediaRecorder is available and can run, or false otherwise.
+ */
+qbMediaRecorder.isAvailable = function(){
+    return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function');
 };
 
 /**
@@ -104,13 +89,7 @@ qbMediaRecorder.prototype.getState = function() {
     return this._mediaRecorder ? this._mediaRecorder.state : 'inactive';
 };
 
-/**
- * Start to recording a stream.
- * Fire the method `stop` if record has state `inprogress`.
- * @param {Object} [stream] - Stream object representing a flux of audio- or video-related data. Or you can set a stream when init a qbMediaRecorder.
- * @returns {void}
- */
-qbMediaRecorder.prototype.start = function(stream) {
+qbMediaRecorder.prototype._setEvents = function() {
     var self = this;
 
     function fireCallback(name, args) {
@@ -121,29 +100,6 @@ qbMediaRecorder.prototype.start = function(stream) {
                 console.error('Founded an error in callback:' + name, e);
             }
         }
-    }
-
-    var mediaRecorderState = self.getState();
-
-    if(mediaRecorderState === 'recording' || mediaRecorderState === 'paused'){
-        self._mediaRecorder.stop();
-    }
-
-    if(stream) {
-        self._stream.length = 0;
-        self._stream = stream;
-    }
-
-    /* Clear data from previously recording */ 
-    self._mediaRecorder = null;
-    self._recordedChunks.length = 0;
-
-    try {
-        self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
-    } catch(e) {
-        console.warn(ERRORS.unsupportMediaRecorderWithOptions, e);
-
-        self._mediaRecorder = new window.MediaRecorder(self._stream);
     }
 
     self._mediaRecorder.ondataavailable = function(e) {
@@ -198,16 +154,79 @@ qbMediaRecorder.prototype.start = function(stream) {
     };
 
     self._mediaRecorder.onstop = function() {
+        // console.info()
         var blob = new Blob(self._recordedChunks, {
             'type' : self._options.mimeType
         });
 
-        fireCallback('onStop', blob);
+        self._recordedBlobs.push(blob);
+
+        if(!self._keepRecording) {
+            console.info('self._recordedBlobs', self._recordedBlobs);
+
+            if(self._recordedBlobs.length > 1) {
+                fireCallback('onStop', new Blob(self._recordedBlobs, {type: self._options.mimeType}));
+            } else {
+                fireCallback('onStop', self._recordedBlobs[0]);
+            }
+        }
+
+        self._keepRecording = false;
     };
 
     self._mediaRecorder.start(self._timeSlice);
 
     fireCallback('onStart');
+};
+
+/**
+ * Start to recording a stream.
+ * Fire the method `stop` if record has state `inprogress`.
+ * @param {Object} [stream] - Stream object representing a flux of audio- or video-related data.
+ * @returns {void}
+ */
+qbMediaRecorder.prototype.start = function(stream) {
+    var self = this;
+
+    var mediaRecorderState = self.getState();
+
+    if(mediaRecorderState === 'recording' || mediaRecorderState === 'paused'){
+        self._mediaRecorder.stop();
+    }
+
+    if(self._stream) {
+        self._stream = null;
+    }
+
+    self._stream = stream;
+
+    /* Clear data from previously recording */ 
+    self._mediaRecorder = null;
+    self._recordedChunks.length = 0;
+
+    try {
+        self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
+    } catch(e) {
+        console.warn(ERRORS.unsupportMediaRecorderWithOptions, e);
+
+        self._mediaRecorder = new window.MediaRecorder(self._stream);
+    }
+
+    self._setEvents();
+};
+
+qbMediaRecorder.prototype.change = function(stream) {
+    var self = this;
+
+    self._keepRecording = true; // don't stop a record
+    self.stop();
+
+     self._stream = null;
+     self._mediaRecorder = null;
+
+    self._stream = stream;
+    self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
+    self._setEvents();
 };
 
 /**

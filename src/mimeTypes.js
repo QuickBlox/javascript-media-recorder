@@ -1,0 +1,18 @@
+'use strict';
+
+module.exports = {
+    'audio': [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg'
+    ],
+    'video': [
+        'video/webm;codecs=h264',
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm;codecs=daala',
+        'video/webm',
+        'video/mp4',
+        'video/mpeg'
+    ]
+};
