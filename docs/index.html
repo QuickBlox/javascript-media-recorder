@@ -22,7 +22,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="qbMediaRecorder.html">qbMediaRecorder</a><ul class='methods'><li data-type='method'><a href="qbMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="qbMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#start">start</a></li><li data-type='method'><a href="qbMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="qbMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="qbMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="qbMediaRecorder.html#download">download</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="qbMediaRecorder.html">qbMediaRecorder</a><ul class='methods'><li data-type='method'><a href="qbMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="qbMediaRecorder.html#.isTypeSupported">isTypeSupported</a></li><li data-type='method'><a href="qbMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#start">start</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -46,50 +46,20 @@
 
 
     <section class="readme">
-        <article><h1>Media Recorder JS</h1><p>Beta version now.<br>Media Recorder JS is a JavaScript library providing cross-browser audio/video recordings.<br>A wrapper for using the <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html">MediaStream Recording API</a>.</p>
+        <article><h1>Media Recorder JS</h1><p>The qbMediaRecorder is a JavaScript library providing cross-browser audio/video recordings and extending the <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html">MediaStream Recording API</a>.</p>
 <p>See <a href="https://quickblox.github.io/javascript-media-recorder/docs/">docs</a> or a <a href="https://quickblox.github.io/javascript-media-recorder/sample/">sample</a>.</p>
-<h3>Support</h3><p>Media Recorder JS supports Firefox 49, Chrome 49 / Chrome for Android 53, Opera 41.</p>
-<h3>Usage</h3><p>qbMediaRecorder is built as a UMD module that can be loaded via CDN, NPM, or from source.</p>
-<p><a href="https://github.com/eslint/eslint">ESLint</a> uses in project as lint, so install it before start developing.</p>
-<pre class="prettyprint source lang-bash"><code>npm install -g eslint</code></pre><h4>Install</h4><p>You can use CDN (by <a href="https://unpkg.com">UNPKG</a>) to deliver qbMediaRecorder.</p>
+<h3>Support</h3><p>The qbMediaRecorder supports Firefox 49, Chrome 49 / Chrome for Android 53, Opera 41.</p>
+<h3>Usage</h3><p>The qbMediaRecorder is built as a UMD module and can be loaded via CDN, NPM, or from source.</p>
+<h4>Install</h4><p>You can use CDN (by <a href="https://unpkg.com">UNPKG</a>) to deliver the qbMediaRecorder.</p>
 <pre class="prettyprint source lang-html"><code>&lt;script src='https://unpkg.com/media-recorder-js/mediaRecorder.js'>&lt;/script></code></pre><p>Or use NPM</p>
 <pre class="prettyprint source lang-javascript"><code>npm install media-recorder-js --save</code></pre><p>Also you can download sources from <a href="https://github.com/QuickBlox/javascript-media-recorder">Github</a>, run project by the following commands.<br>You will need to have <a href="http://gulpjs.com/">Gulp</a>.</p>
 <pre class="prettyprint source lang-bash"><code>npm i
-npm run build</code></pre><h4>Example</h4><pre class="prettyprint source lang-javascript"><code>var opts = {
-    mimeType: 'video',       // set mime type of record media or only type of media: 'video'/'audio'. By default if 'video'
-    ignoreMutedMedia: false, // What to do with a muted input MediaStreamTrack,
-                             // e.g. insert black frames/zero audio volume in the recording or ignore altogether.
-                             // By default is `true`.
-    timeSlice: 1000,         // optionally be passed a timeslice argument with a value in milliseconds.
-                             // the media will be captured in separate chunks of that duration,
-                             // rather than the default behavior of recording the media in a single large chunk.
-    callbacks: {             // Note! Use named function for better debug.
-        onStart: function startRecord() {
-            //...
-        },
-        onError: function errorRecord(error) {
-            //...
-        },
-        onPause: function pauseRecord() {
-            //...
-        },
-        onStop: function stopRecord(blob) {
-            //...
-        },
-        onResume: function resimeRecord() {
-            //...
-        },
-        ondataavailable : function onDataAvaible(e) {
-            console.info(e.data) // sliced data (Blob)
-        }
-    }
-}
-
-var rec = new qbMediaRecorder(stream, opts);
+npm run build</code></pre><h4>Example</h4><pre class="prettyprint source lang-javascript"><code>var rec = new qbMediaRecorder(opts); // At first, new a instance of qbMediaRecorder and set all properties.
 
 rec.start()
 // ...
-rec.stop();</code></pre><h3>Related posts</h3><ul>
+rec.stop();</code></pre><h4>Contribution</h4><p><a href="https://github.com/eslint/eslint">ESLint</a> uses in project as lint, so install it before start developing.</p>
+<pre class="prettyprint source lang-bash"><code>npm install -g eslint</code></pre><h3>Related posts</h3><ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder">MDN</a></li>
 </ul></article>
     </section>
@@ -105,7 +75,7 @@ rec.stop();</code></pre><h3>Related posts</h3><ul>
 
 <footer>
     <p>Made by QB with love.</p>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Dec 20 2016 19:05:55 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Dec 21 2016 19:46:17 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
