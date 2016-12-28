@@ -49,6 +49,35 @@ function qbMediaRecorder(opts) {
     this._keepRecording = false;
 }
 
+qbMediaRecorder.prototype._getMimeType = function (preffered) {
+    var mimeType,
+        type = 'video';
+
+    if(preffered && qbMediaRecorder.isTypeSupported(preffered)) {
+        mimeType = preffered;
+    } else if(preffered) {
+        type = preffered.toString().toLowerCase().indexOf('audio') === -1 ? 'video' : 'audio';
+        mimeType = qbMediaRecorder.getSupportedMimeTypes(type)[0];
+    } else {
+        mimeType = qbMediaRecorder.getSupportedMimeTypes(type)[0];
+    }
+
+    return mimeType;
+}
+
+qbMediaRecorder.prototype._getCallbacks = function(opts) {
+    var callbacks = {},
+        callbackNames = ['onstart', 'onstop', 'onpause', 'onresume', 'onerror', 'onchange', 'ondataavailable'];
+
+    callbackNames.forEach(function(name) {
+        if (name in opts) {
+            callbacks[name] = opts[name];
+        }
+    });
+
+    return callbacks;
+}
+
 qbMediaRecorder._mimeTypes = require('./mimeTypes');
 
 qbMediaRecorder._STATES = ['inactive', 'recording', 'paused'];
@@ -69,12 +98,21 @@ qbMediaRecorder.isAvailable = function(){
 
 /**
  * Returns a Boolean which is true if the MIME type specified is one the user agent can record.
- * @param  {String}  mimeType - The mimeType to check.
- * @return {Boolean}            true if the MediaRecorder implementation is capable of recording Blob objects for the specified MIME type.
+ * @param  {String} mimeType - The mimeType to check.
+ * @return {Boolean}         - True if the MediaRecorder implementation is capable of recording Blob objects for the specified MIME type.
+ *
+ * @example
+ * if( qbMediaRecorder.isTypeSupported('video/mp4') ) {
+ *     el.textContent = 'Will be record in video/mp4';
+ * }
  */
 qbMediaRecorder.isTypeSupported = function(mimeType) {
     if(!qbMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
+    }
+
+    if(!mimeType) {
+        throw new Error('1 argument required, but only 0 present.');
     }
 
     return window.MediaRecorder.isTypeSupported(mimeType);
@@ -101,35 +139,6 @@ qbMediaRecorder.getSupportedMimeTypes = function(type) {
     });
 }
 
-qbMediaRecorder.prototype._getCallbacks = function(opts) {
-    var callbacks = {},
-        callbackNames = ['onstart', 'onstop', 'onpause', 'onresume', 'onerror', 'onchange', 'ondataavailable'];
-
-    callbackNames.forEach(function(name) {
-        if (name in opts) {
-            callbacks[name] = opts[name];
-        }
-    });
-
-    return callbacks;
-}
-
-qbMediaRecorder.prototype._getMimeType = function (preffered) {
-    var mimeType,
-        type = 'video';
-
-    if(preffered && qbMediaRecorder.isTypeSupported(preffered)) {
-        mimeType = preffered;
-    } else if(preffered) {
-        type = preffered.toString().toLowerCase().indexOf('audio') === -1 ? 'video' : 'audio';
-        mimeType = qbMediaRecorder.getSupportedMimeTypes(type)[0];
-    } else {
-        mimeType = qbMediaRecorder.getSupportedMimeTypes(type)[0];
-    }
-
-    return mimeType;
-}
-
 /**
  * Return the current [state of qbMediaRecorder instance](https://w3c.github.io/mediacapture-record/MediaRecorder.html#idl-def-recordingstate).
  * Possibly states: **inactive**, **recording**, **paused**.
@@ -147,226 +156,262 @@ qbMediaRecorder.prototype.getState = function() {
     return this._mediaRecorder ? this._mediaRecorder.state : qbMediaRecorder._STATES[0];
 }
 
+
 /**
  * Start to recording a stream.
  * Fire the method `stop` if an instance inprogress (has a state recording or paused).
  * Fire onstart callback.
  * @param {MediaStream} stream - Stream object representing a flux of audio- or video-related data.
  * @returns {void}
+ *
+ * @example
+ * var options = {
+ *     onstart: function onStart() {
+ *         var time = 0,
+ *             step = 1000;
+ *         
+ *         setTimeout(function () {
+ *             time += step;
+ *             console.info(`You are recording ${time} sec.`);
+ *         }, step);
+ *     }
+ * }
+ *
+ * var rec = new qbRecorder(options);
+ * // ...
+ * rec.start(stream);
  */
 qbMediaRecorder.prototype.start = function(stream) {
     var self = this;
 
-    var mediaRecorderState = self.getState();
+    if(!stream) {
+        throw new Error('1 argument required, but only 0 present.');
+    }
+
+    var mediaRecorderState = this.getState();
 
     if(mediaRecorderState === qbMediaRecorder._STATES[1] || mediaRecorderState === qbMediaRecorder._STATES[2]) {
-        self._mediaRecorder.stop();
+        this._mediaRecorder.stop();
     }
 
-    if(self._stream) {
-        self._stream = null;
+    if(this._stream) {
+        this._stream = null;
     }
-
+    // TODO: need to stream.clone
     self._stream = stream;
 
     self._mediaRecorder = null;
     self._recordedChunks.length = 0;
 
+    self._setMediaRecorder();
+    self._setEvents();
+};
+
+qbMediaRecorder.prototype._setMediaRecorder = function () {
+    var self = this;
+    
     try {
-        self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
+        self._mediaRecorder = new window.MediaRecorder(self._stream, {
+            'mimeType': self.mimeType,
+            'ignoreMutedMedia': self.ignoreMutedMedia
+        });
     } catch(e) {
         console.warn(ERRORS.unsupportMediaRecorderWithOptions, e);
 
         self._mediaRecorder = new window.MediaRecorder(self._stream);
     }
-
-    self._setEvents();
 };
 
-// qbMediaRecorder.prototype._setEvents = function() {
-//     var self = this;
+qbMediaRecorder.prototype._setEvents = function() {
+    var self = this;
 
-//     function fireCallback(name, args) {
-//         if(self._userCallbacks && typeof self._userCallbacks[name] === 'function') {
-//             try {
-//                 self._userCallbacks[name](args);
-//             } catch(e) {
-//                 console.error('Founded an error in callback:' + name, e);
-//             }
-//         }
-//     }
+    function fireCallback(name, args) {
+        if(Object.keys(self.callbacks).length !== 0 && typeof self.callbacks[name] === 'function') {
+            try {
+                self.callbacks[name](args);
+            } catch(e) {
+                console.error('Founded an error in callback:' + name, e);
+            }
+        }
+    }
 
-//     self._mediaRecorder.ondataavailable = function(e) {
-//         if(e.data && e.data.size > 0) {
-//             self._recordedChunks.push(e.data);
-//             fireCallback('ondataavailable', e);
-//         }
-//     };
+    self._mediaRecorder.ondataavailable = function(e) {
+        if(e.data && e.data.size > 0) {
+            self._recordedChunks.push(e.data);
+            fireCallback('ondataavailable', e);
+        }
+    };
 
-//     self._mediaRecorder.onpause = function() {
-//         fireCallback('onPause');
-//     };
+    self._mediaRecorder.onpause = function() {
+        fireCallback('onpause');
+    };
 
-//     self._mediaRecorder.onresume = function() {
-//         fireCallback('onResume');
-//     };
+    self._mediaRecorder.onresume = function() {
+        fireCallback('onresume');
+    };
 
-//     self._mediaRecorder.onerror = function(error) {
-//         switch(error.name) {
-//             case 'InvalidState':
-//                 console.error(ERRORS[error.name]);
-//                 break;
+    self._mediaRecorder.onerror = function(error) {
+        switch(error.name) {
+            case 'InvalidState':
+                console.error(ERRORS[error.name]);
+                break;
 
-//             case 'OutOfMemory':
-//                 console.error(ERRORS[error.name]);
-//                 break;
+            case 'OutOfMemory':
+                console.error(ERRORS[error.name]);
+                break;
 
-//             case 'IllegalStreamModification':
-//                 console.error(ERRORS[error.name]);
-//                 break;
+            case 'IllegalStreamModification':
+                console.error(ERRORS[error.name]);
+                break;
 
-//             case 'OtherRecordingError':
-//                 console.error(ERRORS[error.name]);
-//                 break;
+            case 'OtherRecordingError':
+                console.error(ERRORS[error.name]);
+                break;
 
-//             case 'GenericError':
-//                 console.error(ERRORS[error.name]);
-//                 break;
+            case 'GenericError':
+                console.error(ERRORS[error.name]);
+                break;
 
-//             default:
-//                 console.error('MediaRecorder Error', error);
-//                 break;
-//         }
+            default:
+                console.error('MediaRecorder Error', error);
+                break;
+        }
 
-//         if(self._mediaRecorder.state !== 'inactive' && self._mediaRecorder.state !== 'stopped') {
-//             self._mediaRecorder.stop();
-//         }
+        if(self._mediaRecorder.state !== 'inactive' && self._mediaRecorder.state !== 'stopped') {
+            self._mediaRecorder.stop();
+        }
 
-//         if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
-//             fireCallback('onError', error);
-//         }
-//     };
+        if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
+            fireCallback('onerror', error);
+        }
+    };
 
-//     self._mediaRecorder.onstop = function() {
-//         // console.info()
-//         var blob = new Blob(self._recordedChunks, {
-//             'type' : self._options.mimeType
-//         });
+    self._mediaRecorder.onstop = function() {
+        var blob = new Blob(self._recordedChunks, {
+            'type' : self.mimeType
+        });
 
-//         self._recordedBlobs.push(blob);
+        self.recordedBlobs.push(blob);
 
-//         if(!self._keepRecording) {
-//             console.info('self._recordedBlobs', self._recordedBlobs);
+        if(!self._keepRecording) {
 
-//             if(self._recordedBlobs.length > 1) {
-//                 fireCallback('onStop', new Blob(self._recordedBlobs, {type: self._options.mimeType}));
-//             } else {
-//                 fireCallback('onStop', self._recordedBlobs[0]);
-//             }
-//         }
+            if(self.recordedBlobs.length > 1) {
+                fireCallback('onstop', blob);
+            } else {
+                fireCallback('onstop', self.recordedBlobs[0]);
+            }
+        }
 
-//         self._keepRecording = false;
-//     };
+        self._keepRecording = false;
+    };
 
-//     self._mediaRecorder.start(self._timeSlice);
+    self._mediaRecorder.start(self.timeslice);
 
-//     fireCallback('onStart');
-// };
-
-
-
-// qbMediaRecorder.prototype.change = function(stream) {
-//     var self = this;
-
-//     self._keepRecording = true; // don't stop a record
-//     self.stop();
-
-//      self._stream = null;
-//      self._mediaRecorder = null;
-
-//     self._stream = stream;
-//     self._mediaRecorder = new window.MediaRecorder(self._stream, self._options);
-//     self._setEvents();
-// };
+    fireCallback('onstart');
+};
 
 /**
  * Stop to recording a stream.
  * @return {Blob} Blob of recorded chuncks.
  */
-// qbMediaRecorder.prototype.stop = function() {
-//     var mediaRecorder = this._mediaRecorder,
-//         mediaRecorderState = mediaRecorder && mediaRecorder.state ? mediaRecorder.state : 'inactive';
+qbMediaRecorder.prototype.stop = function() {
+    var mediaRecorder = this._mediaRecorder,
+        mediaRecorderState = mediaRecorder && mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
-//     if(mediaRecorder && mediaRecorderState === 'recording'){
-//         mediaRecorder.stop();
-//     } else {
-//         console.warn(ERRORS.actionFailed);
-//     }
-// };
+    if(mediaRecorder && mediaRecorderState === 'recording'){
+        mediaRecorder.stop();
+    } else {
+        console.warn(ERRORS.actionFailed);
+    }
+};
 
 /**
  * Pause to recording a stream.
  * @returns {void}
  */
-// qbMediaRecorder.prototype.pause = function() {
-//     var self = this;
+qbMediaRecorder.prototype.pause = function() {
+    var self = this;
 
-//     if(self._mediaRecorder && self._mediaRecorder.state === 'recording') {
-//         self._mediaRecorder.pause();
-//     } else {
-//         console.warn(ERRORS.actionFailed);
-//     }
-// };
+    if(self._mediaRecorder && self._mediaRecorder.state === 'recording') {
+        self._mediaRecorder.pause();
+    } else {
+        console.warn(ERRORS.actionFailed);
+    }
+};
 
 /**
  * Resume to recording a stream.
  * @returns {void}
  */
-// qbMediaRecorder.prototype.resume = function() {
-//     var self = this;
+qbMediaRecorder.prototype.resume = function() {
+    var self = this;
 
-//     if(self._mediaRecorder && self._mediaRecorder.state === 'paused') {
-//         self._mediaRecorder.resume();
-//     } else {
-//         console.warn(ERRORS.actionFailed);
-//     }
-// };
+    if(self._mediaRecorder && self._mediaRecorder.state === 'paused') {
+        self._mediaRecorder.resume();
+    } else {
+        console.warn(ERRORS.actionFailed);
+    }
+};
+
+/**
+ * Change a recorded stream.
+ * @param {MediaStream} stream - Stream object representing a flux of audio- or video-related data.
+ * @returns {void}
+ */
+qbMediaRecorder.prototype.change = function(stream) {
+    var self = this;
+
+    if(!stream) {
+        throw new Error('1 argument required, but only 0 present.');
+    }
+
+    self._keepRecording = true; // don't stop a record
+    self.stop();
+
+    self._stream = null;
+    self._mediaRecorder = null;
+
+    // TODO stream.clone
+    self._stream = stream;
+
+    self._setMediaRecorder();
+    self._setEvents();
+};
+
 
 /**
  * Create a file from blob and download as the file. Its method will fire 'stop' if recording in progress.
- * @param  {Strint} fileName Name of file. You can set `false` and we are generate name of file based on Date.now().
- * @param  {Blob}   blob     You can set blob which you get from the method `stop` or don't set anything and
- *                           we will get recorded chuncks.
+ * @param {Strint} fileName - Name of file. You can set `false` and we are generate name of file based on Date.now().
+ * @param {Blob}   blob     - You can set blob which you get from the method `stop` or don't set anything and we will get recorded chuncks.
  * @returns {void}
  */
-// qbMediaRecorder.prototype.download = function(fileName, blob) {
-//     var self = this;
+qbMediaRecorder.prototype.download = function(fileName, blob) {
+    var self = this;
 
-//     var mediaRecorder = this._mediaRecorder,
-//         mediaRecorderState = mediaRecorder && mediaRecorder.state ? mediaRecorder.state : 'inactive';
+    var mediaRecorderState = this.getState();
 
-//     if(mediaRecorder && mediaRecorderState === 'recording') {
-//         mediaRecorder.stop();
-//     }
+    if(mediaRecorderState === qbMediaRecorder._STATES[1] || mediaRecorderState === qbMediaRecorder._STATES[2]) {
+        this._mediaRecorder.stop();
+    }
 
-//     var url = URL.createObjectURL(blob || self._getBlobRecorded()),
-//         a = document.createElement('a');
+    var url = URL.createObjectURL(blob || self._getBlobRecorded()),
+        a = document.createElement('a');
 
-//     a.style.display = 'none';
-//     a.href = url;
-//     a.download = (fileName || Date.now()) + '.' + self._getExtension();
+    a.style.display = 'none';
+    a.href = url;
+    a.download = (fileName || Date.now()) + '.' + self._getExtension();
 
-//     document.body.appendChild(a);
+    document.body.appendChild(a);
 
-//     /* Start dowloading */
-//     a.click();
+    // Start dowloading
+    a.click();
     
-//     /* Remove link */
-//     setTimeout(function() {
-//         document.body.removeChild(a);
-//         window.URL.revokeObjectURL(url);
-//     }, 100);
-// };
+    // Remove link
+    setTimeout(function() {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }, 100);
+};
 
 /**
  * Create a Blob from recorded chunks.
@@ -374,35 +419,35 @@ qbMediaRecorder.prototype.start = function(stream) {
  * @param {Object} [data] - Recorded data.
  * @return {Object} - Blob of recorded media or what you set in data
  */
-// qbMediaRecorder.prototype._getBlobRecorded = function(data) {
-//     var self = this,
-//         chunks = data || self._recordedChunks;
+qbMediaRecorder.prototype._getBlobRecorded = function(data) {
+    var self = this,
+        chunks = data || self._recordedChunks;
 
-//     if(!chunks.length) {
-//         console.warn(ERRORS.no_recorded_chunks);
-//         return false;
-//     }
+    if(!chunks.length) {
+        console.warn(ERRORS.no_recorded_chunks);
+        return false;
+    }
 
-//     return new Blob(chunks, { 'type' : self._options.mimeType });
-// };
+    return new Blob(chunks, { 'type' : self.mimeType });
+};
 
 /**
  * Return a extension of a file. Based on available mimeType.
  * @access private
  * @return {String} For example, 'webm' / 'mp4' / 'ogg'
  */
-// qbMediaRecorder.prototype._getExtension = function() {
-//     var self = this;
+qbMediaRecorder.prototype._getExtension = function() {
+    var self = this;
 
-//     var endTypeMedia = self._options.mimeType.indexOf('/'),
-//         extension = self._options.mimeType.substring(endTypeMedia + 1),
-//         startCodecsInfo = extension.indexOf(';');
+    var endTypeMedia = self.mimeType.indexOf('/'),
+        extension = self.mimeType.substring(endTypeMedia + 1),
+        startCodecsInfo = extension.indexOf(';');
 
-//     if(startCodecsInfo !== -1) {
-//         extension = extension.substring(0, startCodecsInfo);
-//     }
+    if(startCodecsInfo !== -1) {
+        extension = extension.substring(0, startCodecsInfo);
+    }
 
-//     return extension;
-// };
+    return extension;
+};
 
 module.exports = qbMediaRecorder;
