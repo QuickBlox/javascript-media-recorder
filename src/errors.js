@@ -1,11 +1,9 @@
-/* JSHint inline */ 
-/* jshint node: true */ 
-
 'use strict';
 
-var ERRORS ={
+module.exports = {
     'unsupport': 'qbMediaRecorder is not supported this environment.',
     'unsupportMediaRecorderWithOptions': 'Got a warning when creating a MediaRecorder, trying to create MediaRecorder without options.',
+    'requreArgument': '1 argument required, but only 0 present.',
     'callbackError': 'Founded an error in callback:',
     'actionFailed': 'qbMediaRecorder is not created or has an invalid state.',
     'no_recorded_chunks': 'Does not have any recording data.',
@@ -16,5 +14,3 @@ var ERRORS ={
     'OtherRecordingError': 'Used for an fatal error other than those listed above. User agents SHOULD provide as much additional information as possible in the message attribute.',
     'GenericError': 'The UA cannot provide the codec or recording option that has been requested'
 };
-
-module.exports = ERRORS;

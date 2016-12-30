@@ -21,31 +21,28 @@
         </header>
 
         <aside class="toast wrap">
-            <p>This demo requires Firefox&nbsp;49, Chrome&nbsp;49, Chrome&nbsp;for&nbsp;Android&nbsp;53, Opera&nbsp;41 or&nbsp;later.</p>
+            This demo requires Firefox&nbsp;49, Chrome&nbsp;49, Chrome&nbsp;for&nbsp;Android&nbsp;53, Opera&nbsp;41 or&nbsp;later. The https is required.
         </aside>
 
         <main>
             <div class="columns wrap">
                 <div class="column col-6 col-xs-12">
                     <div class="card j-card">
-                        <div class="card-header">
-                            <div class="btn-group btn-group-block">
-                                <label class="form-radio">
-                                    <input type="radio" name="type" value="1">
-                                    <i class="form-icon"></i> Audio only
-                                </label>
-
-                                <label class="form-radio">
-                                    <input type="radio" name="type" value="2" checked>
-                                    <i class="form-icon"></i> Audio & Video
-                                </label>
+                        <div class="card-image">
+                            <div class="video-responsive">
+                                <video class=" j-video_local video" controls muted></video>
                             </div>
                         </div>
+                        
+                        <div class="source">
+                            <div class="form-group">
+                                <select id="j-audioSource" class="invisible form-select select-sm">
+                                </select>
+                            </div>
 
-                        <div class="card-image">
-                            <div class="video-responsive j-media-wrap">
-                                <!-- <audio class="j-video_local" controls></audio> -->
-                                <video class=" j-video_local video" controls muted></video>
+                            <div class="form-group">
+                                <select id="j-videoSource" class="invisible form-select select-sm">
+                                </select>
                             </div>
                         </div>
 
@@ -63,10 +60,6 @@
 
                 <div class="column col-6 col-xs-12">
                     <div class="card j-result-card">
-                        <div class="card-header">
-                            <p class="card--title">Result</p>
-                        </div>
-                        
                         <div class="card-image">
                             <div class="video-responsive">
                                 <video class="j-video_result video" controls></video>
@@ -88,10 +81,13 @@
 
     <footer class="footer">
         <p class="lead ">
-            See <a href="../docs/index.html" target="_blank">docs</a> and <a href="https://github.com/QuickBlox/javascript-media-recorder/tree/master/samples" target="_blank">source&nbsp;code</a>
+            See <a href="../docs/index.html" target="_blank">docs</a> and <a href="https://github.com/QuickBlox/javascript-media-recorder/" target="_blank">source&nbsp;code</a>
         </p>
     </footer>
+
+    <div class="j-notify notify toast toast-danger"></div>
     
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="../mediaRecorder.js"></script>
     <script src="main.js"></script>
 </body>

@@ -6,15 +6,15 @@
   "scripts": {
     "generate-docs": "node_modules/.bin/jsdoc -c .jsdoc.json",
     "develop": "gulp develop",
-    "build": "gulp && gulp compress && npm run generate-docs",
-    "connect": "gulp connect"
+    "build": "npm run lint && gulp && gulp compress && npm run generate-docs",
+    "connect": "gulp connect",
+    "lint": "eslint ./src/*.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QuickBlox/javascript-media-recorder.git"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "(Apache-2.0)",
   "bugs": {
     "url": "https://github.com/QuickBlox/javascript-media-recorder/issues"
   },
@@ -29,5 +29,10 @@
     "gulp-uglify": "^2.0.0",
     "jsdoc": "^3.4.3",
     "vinyl-source-stream": "^1.1.0"
-  }
+  },
+  "keywords": [
+    "record",
+    "mediastream",
+    "webrtc"
+  ]
 }

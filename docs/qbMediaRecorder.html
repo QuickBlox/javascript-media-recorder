@@ -22,7 +22,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="qbMediaRecorder.html">qbMediaRecorder</a><ul class='methods'><li data-type='method'><a href="qbMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="qbMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#start">start</a></li><li data-type='method'><a href="qbMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="qbMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="qbMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="qbMediaRecorder.html#download">download</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="qbMediaRecorder.html">qbMediaRecorder</a><ul class='methods'><li data-type='method'><a href="qbMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="qbMediaRecorder.html#.isTypeSupported">isTypeSupported</a></li><li data-type='method'><a href="qbMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="qbMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="qbMediaRecorder.html#start">start</a></li><li data-type='method'><a href="qbMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="qbMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="qbMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="qbMediaRecorder.html#change">change</a></li><li data-type='method'><a href="qbMediaRecorder.html#download">download</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -53,7 +53,7 @@
 
     
 
-    <h4 class="name" id="qbMediaRecorder"><span class="type-signature"></span>new qbMediaRecorder<span class="signature">(stream, opts)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="qbMediaRecorder"><span class="type-signature"></span>new qbMediaRecorder<span class="signature">(options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -65,7 +65,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line8">line 8</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line5">line 5</a>
     </li></ul></dd>
     
 
@@ -114,7 +114,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>opts = {    mimeType: 'audio',       // set mime type of record media or only type of media: 'video'/'audio'.    ignoreMutedMedia: false, // What to do with a muted input MediaStreamTrack,                             // e.g. insert black frames/zero audio volume in the recording or ignore altogether.                             // By default is `true`.    timeSlice: 1000,         // optionally be passed a timeslice argument with a value in milliseconds.                             // the media will be captured in separate chunks of that duration,                             // rather than the default behavior of recording the media in a single large chunk.    callbacks: {             // Note! Use named function for better debug.        onStart: function startRecord() {            //...        },        onError: function errorRecord(error) {            //...        },        onPause: function pauseRecord() {            //...        },        onStop: function stopRecord(blob) {            //...        },        onResume: function resimeRecord() {            //...        }    }}var rec = new qbMediaRecorder(stream, opts);rec.start()// ...rec.stop();</code></pre>
+    <pre class="prettyprint"><code>var options = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    }};// uses as global variable, qbMediaRecorder is built as a UMD module.var recorder = new qbMediaRecorder(options);</code></pre>
 
 
 
@@ -132,6 +132,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -144,13 +146,67 @@
 
         <tr>
             
-                <td class="name"><code>stream</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">mediaStream</span>
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Object of parameters.</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mimeType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
 
 
             
@@ -159,21 +215,27 @@
             
 
             
+                <td class="default">
+                
+                    <code>video</code>
+                
+                </td>
+            
 
-            <td class="description last"><p>object representing a flux of audio- or video-related data.</p></td>
+            <td class="description last"><p>Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm';</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>opts</code></td>
+                <td class="name"><code>timeslice</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">object</span>
+<span class="param-type">Number</span>
 
 
             
@@ -182,8 +244,239 @@
             
 
             
+                <td class="default">
+                
+                    <code>1000</code>
+                
+                </td>
+            
 
-            <td class="description last"><p>see example</p></td>
+            <td class="description last"><p>The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ignoreMutedMedia</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    <code>true</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onstart</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle the start event.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onstop</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle the stop event.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onpause</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle the pause event.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onresume</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle the resume event.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onerror</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle an ErrorEvent.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>onchange</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle the change a stream event.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ondataavailable</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Called to handle the dataavailable event. The Blob of recorded data is contained in this event.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -219,79 +512,6 @@
     
 
     
-        <h3 class="subsection-title">Members</h3>
-
-        
-            
-<h4 class="name" id="._mimeTypes"><span class="type-signature">(static) </span>_mimeTypes<span class="type-signature"> :Object</span></h4>
-
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line89">line 89</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">Object</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-
-        
-    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -313,7 +533,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line79">line 79</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line95">line 95</a>
     </li></ul></dd>
     
 
@@ -353,7 +573,7 @@
 
 
 <div class="description">
-    <p>Checking is environment supports recording.</p>
+    <p>It checks capability of recording in the environment.<br>Checks MediaRecorder, MediaRecorder.isTypeSupported and Blob.</p>
 </div>
 
 
@@ -362,6 +582,11 @@
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>if(qbMediaRecorder.isAvailable()) {    // ... show UI for recording}</code></pre>
 
 
 
@@ -407,7 +632,7 @@
 
     
 
-    <h4 class="name" id=".getSupportedMimeTypes"><span class="type-signature">(static) </span>getSupportedMimeTypes<span class="signature">(prefferedTypeMedia)</span><span class="type-signature"> &rarr; {array}</span></h4>
+    <h4 class="name" id=".isTypeSupported"><span class="type-signature">(static) </span>isTypeSupported<span class="signature">(mimeType)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -419,7 +644,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line113">line 113</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line109">line 109</a>
     </li></ul></dd>
     
 
@@ -459,7 +684,7 @@
 
 
 <div class="description">
-    <p>Checking all mime types for support in browser enviroment. Recommended mime type has 0 index.</p>
+    <p>Returns a Boolean which is true if the MIME type specified is one the user agent can record.</p>
 </div>
 
 
@@ -468,6 +693,11 @@
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>if( qbMediaRecorder.isTypeSupported('video/mp4') ) {    el.textContent = 'Will be record in video/mp4';}</code></pre>
 
 
 
@@ -497,13 +727,13 @@
 
         <tr>
             
-                <td class="name"><code>prefferedTypeMedia</code></td>
+                <td class="name"><code>mimeType</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
             
@@ -513,7 +743,7 @@
 
             
 
-            <td class="description last"><p>'audio' or 'video'. What type of media you want to check support.<br>                                    By default is 'video'.</p></td>
+            <td class="description last"><p>The mimeType to check.</p></td>
         </tr>
 
     
@@ -537,7 +767,9 @@
 
         
 <div class="param-desc">
-    <p>Array of supported mimetypes.</p>
+    <ul>
+<li>True if the MediaRecorder implementation is capable of recording Blob objects for the specified MIME type.</li>
+</ul>
 </div>
 
 
@@ -548,7 +780,7 @@
     </dt>
     <dd>
         
-<span class="param-type">array</span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -562,7 +794,7 @@
 
     
 
-    <h4 class="name" id="getState"><span class="type-signature"></span>getState<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+    <h4 class="name" id=".getSupportedMimeTypes"><span class="type-signature">(static) </span>getSupportedMimeTypes<span class="signature">(mimeType<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -574,7 +806,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line132">line 132</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line130">line 130</a>
     </li></ul></dd>
     
 
@@ -614,7 +846,7 @@
 
 
 <div class="description">
-    <p>Return a <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html#idl-def-recordingstate">state of recording</a>.<br>Possibly states: <strong>inactive</strong>, <strong>recording</strong>, <strong>paused</strong></p>
+    <p>Return all supported mime types and container format.</p>
 </div>
 
 
@@ -623,6 +855,191 @@
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var mimeType = qbMediaRecorder.getSupportedMimeTypes('audio');console.info(`Call will recording in ${mimeType[0]}`);</code></pre>
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mimeType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>video</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Type of media.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Array of supported mimetypes.Recommended mimetype has 0 index.</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getState"><span class="type-signature"></span>getState<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+<!-- 
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line155">line 155</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+ -->
+
+
+<div class="description">
+    <p>Return the current <a href="https://w3c.github.io/mediacapture-record/MediaRecorder.html#idl-def-recordingstate">state of qbMediaRecorder instance</a>.<br>Possibly states: <strong>inactive</strong>, <strong>recording</strong>, <strong>paused</strong>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var recorder = new qbMediaRecorder();// ...some codeif(recorder.getState() == 'recording') {    console.info('You are still recording.');}</code></pre>
 
 
 
@@ -668,7 +1085,7 @@
 
     
 
-    <h4 class="name" id="start"><span class="type-signature"></span>start<span class="signature">(stream)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="start"><span class="type-signature"></span>start<span class="signature">(stream)</span><span class="type-signature"> &rarr; {void}</span></h4>
 
     
 
@@ -680,7 +1097,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line145">line 145</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line184">line 184</a>
     </li></ul></dd>
     
 
@@ -720,7 +1137,7 @@
 
 
 <div class="description">
-    <p>Start to recording a stream.<br>Fire the method <code>stop</code> if record has state <code>inprogress</code>.</p>
+    <p>Start to recording a stream.<br>Fire the method <code>stop</code> if an instance inprogress (has a state recording or paused).<br>Fire onstart callback.</p>
 </div>
 
 
@@ -729,6 +1146,11 @@
 
 
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;                setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
 
 
 
@@ -774,7 +1196,7 @@
 
             
 
-            <td class="description last"><p>object representing a flux of audio- or video-related data.</p></td>
+            <td class="description last"><p>Stream object representing a flux of audio- or video-related data.</p></td>
         </tr>
 
     
@@ -794,6 +1216,24 @@
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">void</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
         
@@ -813,7 +1253,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line248">line 248</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line317">line 317</a>
     </li></ul></dd>
     
 
@@ -907,7 +1347,7 @@
 
     
 
-    <h4 class="name" id="pause"><span class="type-signature"></span>pause<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="pause"><span class="type-signature"></span>pause<span class="signature">()</span><span class="type-signature"> &rarr; {void}</span></h4>
 
     
 
@@ -919,7 +1359,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line262">line 262</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line332">line 332</a>
     </li></ul></dd>
     
 
@@ -984,6 +1424,24 @@
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">void</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
         
@@ -991,7 +1449,7 @@
 
     
 
-    <h4 class="name" id="resume"><span class="type-signature"></span>resume<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="resume"><span class="type-signature"></span>resume<span class="signature">()</span><span class="type-signature"> &rarr; {void}</span></h4>
 
     
 
@@ -1003,7 +1461,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line275">line 275</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line346">line 346</a>
     </li></ul></dd>
     
 
@@ -1068,6 +1526,24 @@
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">void</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
         
@@ -1075,7 +1551,7 @@
 
     
 
-    <h4 class="name" id="download"><span class="type-signature"></span>download<span class="signature">(fileName, blob)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="change"><span class="type-signature"></span>change<span class="signature">(stream)</span><span class="type-signature"> &rarr; {void}</span></h4>
 
     
 
@@ -1087,7 +1563,158 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line291">line 291</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line361">line 361</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+ -->
+
+
+<div class="description">
+    <p>Change a recorded stream.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>stream</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">MediaStream</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Stream object representing a flux of audio- or video-related data.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">void</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="download"><span class="type-signature"></span>download<span class="signature">(fileName<span class="signature-attributes">opt</span>, blob<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
+
+    
+
+
+<!-- 
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line393">line 393</a>
     </li></ul></dd>
     
 
@@ -1138,6 +1765,11 @@
 
 
 
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var rec = new qbRecorder();rec.start(stream);// ...rec.download(false); // Set false, name will be generated based on Date.now()</code></pre>
+
+
 
 
     <h5>Parameters:</h5>
@@ -1153,7 +1785,11 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -1178,10 +1814,26 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>Name of file. You can set <code>false</code> and we are generate name of file based on Date.now()</p></td>
+            
+                <td class="default">
+                
+                    <code>Date.now()</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>Name of file.</p></td>
         </tr>
 
     
@@ -1201,10 +1853,24 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>You can set blob which you get from the method <code>stop</code> or don't set anything and<br>                          we will get recorded chuncks.</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>You can set blob which you get from the method <code>stop</code> or don't set anything and we will get recorded chuncks.</p></td>
         </tr>
 
     
@@ -1224,6 +1890,24 @@
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">void</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
         
@@ -1245,7 +1929,7 @@
 
 <footer>
     <p>Made by QB with love.</p>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Nov 25 2016 11:29:27 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 30 2016 16:44:13 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -9,17 +9,13 @@ body {
     flex-direction: column;
 }
 
-.video-wrap {
-    background-color: #efefef;
-}
-
 .content {
     flex: 1;
 }
 
 .wrap {
     width: 80%;
-    max-width: 890px;
+    max-width: 1120px;
     margin: 0 auto;
 }
 
@@ -30,6 +26,14 @@ body {
 .title_sub {
     font-size: .6em;
     font-weight: 300;
+}
+
+.source {
+    width: 100%;
+
+    position: absolute;
+    top: 5px;
+    left: 5px;
 }
 
 .video {
@@ -57,8 +61,30 @@ body {
 
 }
 
-.card--title {
-    margin: 0;
-    line-height: 1.8rem;
-    padding: .3rem 2rem;
+.notify {
+    opacity: 0;
+
+    max-width: 480px;
+    position: fixed;
+    bottom: 10%;
+    right: 5%;
+
+    transition: opacity .4s ease;
+}
+
+.notify-active {
+    opacity: 1;
+}
+
+/* Changes for spectre */
+.form-select {
+    max-width: 100%;
+}
+
+.card {
+    position: relative;
+}
+
+.form-select:not([multiple]) {
+    background-color: rgba(255, 255, 255, .4);
 }

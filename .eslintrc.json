@@ -1,0 +1,15 @@
+{
+    "extends": "eslint:recommended",
+    "env": {
+        "browser": true,
+        "commonjs": true
+    },
+    "rules": {
+        "strict": 2,
+        "no-alert": 2,
+        "valid-jsdoc": 1,
+        "indent": ["warn", 4, { "SwitchCase": 1 }],
+        "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+        "no-console": ["error", { "allow": ["warn", "error"] }]
+    }
+}
