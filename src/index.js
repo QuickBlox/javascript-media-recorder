@@ -4,20 +4,20 @@ var ERRORS = require('./errors');
 
 /**
  * @constructor qbMediaRecorder
- * @param {Object}   [options] - Object of parameters.
- * @param {String}   options[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm';
- * @param {Number}   options[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback.
- * @param {Boolean}  options[].ignoreMutedMedia=true - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
- * @param {Function} options[].onstart - Called to handle the start event.
- * @param {Function} options[].onstop - Called to handle the stop event.
- * @param {Function} options[].onpause - Called to handle the pause event.
- * @param {Function} options[].onresume - Called to handle the resume event.
- * @param {Function} options[].onerror - Called to handle an ErrorEvent.
- * @param {Function} options[].onchange - Called to handle the change a stream event.
- * @param {Function} options[].ondataavailable - Called to handle the dataavailable event. The Blob of recorded data is contained in this event.
+ * @param {Object}   [opts] - Object of parameters.
+ * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm';
+ * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback.
+ * @param {Boolean}  opts[].ignoreMutedMedia=true - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
+ * @param {Function} opts[].onstart - Called to handle the start event.
+ * @param {Function} opts[].onstop - Called to handle the stop event.
+ * @param {Function} opts[].onpause - Called to handle the pause event.
+ * @param {Function} opts[].onresume - Called to handle the resume event.
+ * @param {Function} opts[].onerror - Called to handle an ErrorEvent.
+ * @param {Function} opts[].onchange - Called to handle the change a stream event.
+ * @param {Function} opts[].ondataavailable - Called to handle the dataavailable event. The Blob of recorded data is contained in this event.
  *
  * @example
- * var options = {
+ * var opts = {
  *     onstart: function onStart() { // Use named function.
  *         console.log('Recorder is started');
  *     },
@@ -27,7 +27,7 @@ var ERRORS = require('./errors');
  * };
  *
  * // uses as global variable, qbMediaRecorder is built as a UMD module.
- * var recorder = new qbMediaRecorder(options);
+ * var recorder = new qbMediaRecorder(opts);
  *
  */
 function qbMediaRecorder(opts) {
@@ -120,12 +120,12 @@ qbMediaRecorder.isTypeSupported = function(mimeType) {
 
 /**
  * Return all supported mime types and container format.
- * @param  {String} [mimeType=video] Type of media.
+ * @param  {String} [type=video] Type of media.
  * @return {Array}                   Array of supported mimetypes.Recommended mimetype has 0 index.
  *
  * @example
- * var mimeType = qbMediaRecorder.getSupportedMimeTypes('audio');
- * console.info(`Call will recording in ${mimeType[0]}`);
+ * var type = qbMediaRecorder.getSupportedMimeTypes('audio');
+ * console.info(`Call will recording in ${type[0]}`);
  */
 qbMediaRecorder.getSupportedMimeTypes = function(type) {
     var typeMedia = type || 'video';
