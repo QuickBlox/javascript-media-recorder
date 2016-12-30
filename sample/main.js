@@ -132,12 +132,12 @@ var inputCard = {
             }
         });
 
-        if(self.devices.audio.length > 1) {
+        if(self.devices.audio.length > 0) {
             self.ui.selectAudioSource.appendChild( self._createOptions('audio') );
             self.ui.selectAudioSource.classList.remove('invisible');
         }
 
-        if(self.devices.video.length > 1) {
+        if(self.devices.video.length > 0) {
             self.ui.selectVideoSource.appendChild( self._createOptions('video') );
             self.ui.selectVideoSource.classList.remove('invisible');
         }

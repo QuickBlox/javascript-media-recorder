@@ -14,7 +14,6 @@
     "type": "git",
     "url": "git+https://github.com/QuickBlox/javascript-media-recorder.git"
   },
-  "author": "",
   "license": "(Apache-2.0)",
   "bugs": {
     "url": "https://github.com/QuickBlox/javascript-media-recorder/issues"

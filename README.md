@@ -1,7 +1,14 @@
-# Media Recorder JS
-The qbMediaRecorder is a JavaScript library providing cross-browser audio/video recordings and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
+# qbMediaRecorderJS
+The qbMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
 
-See [docs](https://quickblox.github.io/javascript-media-recorder/docs/) or a [sample](https://quickblox.github.io/javascript-media-recorder/sample/).
+Extendings methods:
+ - [isAvailable](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#.isAvailable);
+ - [getSupportedMimeTypes](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#.getSupportedMimeTypes);
+ - [change](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#change);
+ - [download](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#download).
+
+See [docs](https://quickblox.github.io/javascript-media-recorder/docs/) - all public API.
+Check our [sample](https://quickblox.github.io/javascript-media-recorder/sample/), use a few source (video / audio).
 
 ### Support
 The qbMediaRecorder supports Firefox 49, Chrome 49 / Chrome for Android 53, Opera 41.
@@ -25,15 +32,6 @@ You will need to have [Gulp](http://gulpjs.com/).
 npm i
 npm run build
 ```
-#### Example
-```javascript
-var rec = new qbMediaRecorder(opts); // At first, new a instance of qbMediaRecorder and set all properties.
-
-rec.start()
-// ...
-rec.stop();
-```
-
 #### Contribution
 [ESLint](https://github.com/eslint/eslint) uses in project as lint, so install it before start developing.
 ```bash

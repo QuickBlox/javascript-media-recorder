@@ -112,7 +112,7 @@ qbMediaRecorder.isTypeSupported = function(mimeType) {
     }
 
     if(!mimeType) {
-        throw new Error('1 argument required, but only 0 present.');
+        throw new Error(ERRORS.requreArgument);
     }
 
     return window.MediaRecorder.isTypeSupported(mimeType);
@@ -185,7 +185,7 @@ qbMediaRecorder.prototype.start = function(stream) {
     var self = this;
 
     if(!stream) {
-        throw new Error('1 argument required, but only 0 present.');
+        throw new Error(ERRORS.requreArgument);
     }
 
     var mediaRecorderState = this.getState();
@@ -362,7 +362,7 @@ qbMediaRecorder.prototype.change = function(stream) {
     var self = this;
 
     if(!stream) {
-        throw new Error('1 argument required, but only 0 present.');
+        throw new Error(ERRORS.requreArgument);
     }
 
     self._keepRecording = true; // don't stop a record
@@ -378,12 +378,17 @@ qbMediaRecorder.prototype.change = function(stream) {
     self._setEvents();
 };
 
-
 /**
  * Create a file from blob and download as the file. Its method will fire 'stop' if recording in progress.
- * @param {Strint} fileName - Name of file. You can set `false` and we are generate name of file based on Date.now().
- * @param {Blob}   blob     - You can set blob which you get from the method `stop` or don't set anything and we will get recorded chuncks.
+ * @param {Strint} [fileName=Date.now()] - Name of file.
+ * @param {Blob}   [blob] - You can set blob which you get from the method `stop` or don't set anything and we will get recorded chuncks.
  * @returns {void}
+ *
+ * @example
+ * var rec = new qbRecorder();
+ * rec.start(stream);
+ * // ...
+ * rec.download(false); // Set false, name will be generated based on Date.now()
  */
 qbMediaRecorder.prototype.download = function(fileName, blob) {
     var self = this;

@@ -3,6 +3,7 @@
 module.exports = {
     'unsupport': 'qbMediaRecorder is not supported this environment.',
     'unsupportMediaRecorderWithOptions': 'Got a warning when creating a MediaRecorder, trying to create MediaRecorder without options.',
+    'requreArgument': '1 argument required, but only 0 present.',
     'callbackError': 'Founded an error in callback:',
     'actionFailed': 'qbMediaRecorder is not created or has an invalid state.',
     'no_recorded_chunks': 'Does not have any recording data.',
