@@ -28,11 +28,15 @@
     "gulp-plumber": "^1.1.0",
     "gulp-uglify": "^2.0.0",
     "jsdoc": "^3.4.3",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0",
+    "lamejs": "^1.1.0"
   },
   "keywords": [
     "record",
     "mediastream",
     "webrtc"
-  ]
+  ],
+  "dependencies": {
+    "browserify": "^13.3.0"
+  }
 }
