@@ -258,7 +258,6 @@ QBMediaRecorder.prototype.start = function(stream) {
     } else {
         self._setMediaRecorder();
     }
-
     self._setEvents();
 };
 
@@ -283,31 +282,85 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
     self._closeAudioProcess();
 
     self._mediaRecorder = {
-        'start': function() {
-            this.state = QBMediaRecorder._STATES[1];
-            self._startAudioProcess();
+        start: function() {
+            try {
+                this.state = 'recording';
+                self._startAudioProcess();
+                this.onstart();
+            } catch(error) {
+                this.onerror(error);
+            }
         },
 
-        'stop': function() {
-            self._stopAudioProcess();
-            this.state = QBMediaRecorder._STATES[0];
+        stop: function() {
+            try {
+                this.state = 'stopped';
+                self._stopAudioProcess();
+                this.onstop();
+            } catch(error) {
+                this.onerror(error);
+            }
         },
 
-        'pause': function() {
-            this.state = QBMediaRecorder._STATES[2];
+        pause: function() {
+            try {
+                this.state = 'paused';
+                this.onpause();
+            } catch(error) {
+                this.onerror(error);
+            }
         },
 
-        'resume': function() {
-            this.state = QBMediaRecorder._STATES[1];
+        resume: function() {
+            try {
+                this.state = 'recording';
+                this.onresume();
+            } catch(error) {
+                this.onerror(error);
+            }
         },
 
-        'state': QBMediaRecorder._STATES[0]
+        /* callbacks */
+        onstart: function() {
+            if (this.state !== 'recording') {
+                this.state = 'recording';
+            }
+        },
+
+        onstop: function() {
+            if (this.state !== 'stopped') {
+                this.state = 'stopped';
+            }
+        },
+
+        onpause: function() {
+            if (this.state !== 'paused') {
+                this.state = 'paused';
+            }
+        },
+
+        onresume: function() {
+            if (this.state !== 'recording') {
+                this.state = 'recording';
+            }
+        },
+
+        onerror: function() {
+            try {
+                self._closeAudioProcess();
+            } catch(error) {
+                throw new Error(error);
+            }
+        },
+
+        ondataavailable: function() {
+            this.onerror( new Error(ERRORS.ondataavailableIsOff) );
+        }
     };
 };
 
 QBMediaRecorder.prototype._setEvents = function() {
-    var self = this,
-        isMediaRecorder = !self._customMimeType;
+    var self = this;
 
     function fireCallback(name, args) {
         if(Object.keys(self.callbacks).length !== 0 && typeof self.callbacks[name] === 'function') {
@@ -319,14 +372,12 @@ QBMediaRecorder.prototype._setEvents = function() {
         }
     }
 
-    if (isMediaRecorder) {
-        self._mediaRecorder.ondataavailable = function(e) {
-            if(e.data && e.data.size > 0) {
-                self._recordedChunks.push(e.data);
-                fireCallback('ondataavailable', e);
-            }
-        };
-    }
+    self._mediaRecorder.ondataavailable = function(e) {
+        if(e.data && e.data.size > 0) {
+            self._recordedChunks.push(e.data);
+            fireCallback('ondataavailable', e);
+        }
+    };
 
     self._mediaRecorder.onpause = function() {
         fireCallback('onpause');
@@ -378,14 +429,11 @@ QBMediaRecorder.prototype._setEvents = function() {
         });
 
         self.recordedBlobs.push(blob);
-    console.log(self.recordedBlobs);
-        console.log(!self._keepRecording);
+
         if(!self._keepRecording) {
             if(self.recordedBlobs.length > 1) {
-                console.log(blob);
                 fireCallback('onstop', blob);
             } else {
-                console.log(self.recordedBlobs[0]);
                 fireCallback('onstop', self.recordedBlobs[0]);
             }
         }
@@ -393,13 +441,7 @@ QBMediaRecorder.prototype._setEvents = function() {
         self._keepRecording = false;
     };
 
-    if (isMediaRecorder) {
-        self._mediaRecorder.start(self.timeslice);
-    } else {
-        self._mediaRecorder.start();
-    }
-    
-    console.log(self._mediaRecorder);
+    self._mediaRecorder.start(self.timeslice);
 
     fireCallback('onstart');
 };
@@ -412,7 +454,7 @@ QBMediaRecorder.prototype.stop = function() {
     var mediaRecorder = this._mediaRecorder,
         mediaRecorderState = mediaRecorder && mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
-    if(mediaRecorder && mediaRecorderState === 'recording'){
+    if(mediaRecorder && (mediaRecorderState === 'recording' || mediaRecorderState === 'paused')){
         mediaRecorder.stop();
     } else {
         console.warn(ERRORS.actionFailed);

@@ -1,6 +1,6 @@
 {
   "name": "media-recorder-js",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
   "scripts": {
@@ -37,6 +37,7 @@
     "webrtc"
   ],
   "dependencies": {
-    "browserify": "^13.3.0"
+    "browserify": "^13.3.0",
+    "lamejs": "^1.1.0"
   }
 }
