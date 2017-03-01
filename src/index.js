@@ -31,11 +31,13 @@ var ERRORS = require('./errors');
  *
  */
 function QBMediaRecorder(opts) {
-    if(!QBMediaRecorder.isAvailable()) {
+    var prefferedMimeType = opts && opts.mimeType ? opts.mimeType : false;
+    this._customMimeType = (prefferedMimeType === 'audio/wav') ? 'audio/wav' :
+                           (prefferedMimeType === 'audio/mp3') ? 'audio/mp3' : false;
+
+    if(!QBMediaRecorder.isAvailable() && !this._customMimeType) {
         throw new Error(ERRORS.unsupport);
     }
-
-    var prefferedMimeType = opts && opts.mimeType ? opts.mimeType : false;
 
     this.mimeType = this._getMimeType(prefferedMimeType);
     this.timeslice = opts && opts.timeslice && isNaN(+opts.timeslice) ? opts.timeslice : 1000;
@@ -48,11 +50,27 @@ function QBMediaRecorder(opts) {
     this._recordedChunks = [];
     this._keepRecording = false;
 
-    if (window && window.lamejs) {
-        this.mp3encoder = new window.lamejs.Mp3Encoder(1, 48000, 128);
-        console.log(this.mp3encoder);
+    if (this._customMimeType) {
+        this._setCustomRecorderTools();
     }
 }
+
+QBMediaRecorder.prototype._setCustomRecorderTools = function () {
+    if(!QBMediaRecorder._isAudioContext()) {
+        throw new Error(ERRORS.unsupport);
+    }
+
+    var self = this;
+
+    self.mimeType = self._customMimeType;
+    self._audioContext = null;
+    self._buffer = [];
+    self._recordingLength = 0;
+
+    if (QBMediaRecorder._isMp3Encoder() && this._customMimeType === 'audio/mp3') {
+        self._mp3encoder = new window.lamejs.Mp3Encoder(1, 48000, 128);
+    }
+};
 
 QBMediaRecorder.prototype._getMimeType = function (preffered) {
     var mimeType,
@@ -97,8 +115,16 @@ QBMediaRecorder._STATES = ['inactive', 'recording', 'paused'];
  *     // ... show UI for recording
  * }
  */
-QBMediaRecorder.isAvailable = function(){
+QBMediaRecorder.isAvailable = function() {
     return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function' && window.Blob);
+};
+
+QBMediaRecorder._isAudioContext = function () {
+    return !!(window && (window.AudioContext || window.webkitAudioContext));
+};
+
+QBMediaRecorder._isMp3Encoder = function () {
+    return !!(window && (window.AudioContext || window.webkitAudioContext) && window.lamejs);
 };
 
 /**
@@ -112,6 +138,8 @@ QBMediaRecorder.isAvailable = function(){
  * }
  */
 QBMediaRecorder.isTypeSupported = function(mimeType) {
+    var result = false;
+
     if(!QBMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
     }
@@ -120,7 +148,25 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
         throw new Error(ERRORS.requreArgument);
     }
 
-    return window.MediaRecorder.isTypeSupported(mimeType);
+    switch(mimeType) {
+        case 'audio/wav':
+            if (QBMediaRecorder._isAudioContext()) {
+                result = true;
+            }
+            break;
+
+        case 'audio/mp3':
+            if (QBMediaRecorder._isAudioContext() && QBMediaRecorder._isMp3Encoder()) {
+                result = true;
+            }
+            break;
+
+        default:
+            result = window.MediaRecorder.isTypeSupported(mimeType);
+            break;
+    }
+
+    return result;
 };
 
 /**
@@ -204,11 +250,15 @@ QBMediaRecorder.prototype.start = function(stream) {
     }
     // TODO: need to stream.clone
     self._stream = stream;
-
     self._mediaRecorder = null;
     self._recordedChunks.length = 0;
 
-    self._setMediaRecorder();
+    if (self._customMimeType) {
+        self._setCustomRecorder();
+    } else {
+        self._setMediaRecorder();
+    }
+
     self._setEvents();
 };
 
@@ -227,8 +277,37 @@ QBMediaRecorder.prototype._setMediaRecorder = function () {
     }
 };
 
-QBMediaRecorder.prototype._setEvents = function() {
+QBMediaRecorder.prototype._setCustomRecorder = function() {
     var self = this;
+
+    self._closeAudioProcess();
+
+    self._mediaRecorder = {
+        'start': function() {
+            this.state = QBMediaRecorder._STATES[1];
+            self._startAudioProcess();
+        },
+
+        'stop': function() {
+            self._stopAudioProcess();
+            this.state = QBMediaRecorder._STATES[0];
+        },
+
+        'pause': function() {
+            this.state = QBMediaRecorder._STATES[2];
+        },
+
+        'resume': function() {
+            this.state = QBMediaRecorder._STATES[1];
+        },
+
+        'state': QBMediaRecorder._STATES[0]
+    };
+};
+
+QBMediaRecorder.prototype._setEvents = function() {
+    var self = this,
+        isMediaRecorder = !self._customMimeType;
 
     function fireCallback(name, args) {
         if(Object.keys(self.callbacks).length !== 0 && typeof self.callbacks[name] === 'function') {
@@ -240,12 +319,14 @@ QBMediaRecorder.prototype._setEvents = function() {
         }
     }
 
-    self._mediaRecorder.ondataavailable = function(e) {
-        if(e.data && e.data.size > 0) {
-            self._recordedChunks.push(e.data);
-            fireCallback('ondataavailable', e);
-        }
-    };
+    if (isMediaRecorder) {
+        self._mediaRecorder.ondataavailable = function(e) {
+            if(e.data && e.data.size > 0) {
+                self._recordedChunks.push(e.data);
+                fireCallback('ondataavailable', e);
+            }
+        };
+    }
 
     self._mediaRecorder.onpause = function() {
         fireCallback('onpause');
@@ -297,12 +378,14 @@ QBMediaRecorder.prototype._setEvents = function() {
         });
 
         self.recordedBlobs.push(blob);
-
+    console.log(self.recordedBlobs);
+        console.log(!self._keepRecording);
         if(!self._keepRecording) {
-
             if(self.recordedBlobs.length > 1) {
+                console.log(blob);
                 fireCallback('onstop', blob);
             } else {
+                console.log(self.recordedBlobs[0]);
                 fireCallback('onstop', self.recordedBlobs[0]);
             }
         }
@@ -310,7 +393,13 @@ QBMediaRecorder.prototype._setEvents = function() {
         self._keepRecording = false;
     };
 
-    self._mediaRecorder.start(self.timeslice);
+    if (isMediaRecorder) {
+        self._mediaRecorder.start(self.timeslice);
+    } else {
+        self._mediaRecorder.start();
+    }
+    
+    console.log(self._mediaRecorder);
 
     fireCallback('onstart');
 };
@@ -379,7 +468,12 @@ QBMediaRecorder.prototype.change = function(stream) {
     // TODO stream.clone
     self._stream = stream;
 
-    self._setMediaRecorder();
+    if (self._customMimeType) {
+        self._setCustomRecorder();
+    } else {
+        self._setMediaRecorder();
+    }
+
     self._setEvents();
 };
 
@@ -458,6 +552,141 @@ QBMediaRecorder.prototype._getExtension = function() {
     }
 
     return extension;
+};
+
+
+QBMediaRecorder.prototype._startAudioProcess = function() {
+    if(!QBMediaRecorder._isAudioContext()) {
+        throw new Error(ERRORS.unsupport);
+    }
+
+    var self = this,
+        audioContext,
+        audioInput,
+        recorder,
+        volume;
+
+    self._closeAudioProcess();
+
+    audioContext = window.AudioContext || window.webkitAudioContext;
+    self._audioContext = new audioContext;
+    volume = self._audioContext.createGain();
+    audioInput = self._audioContext.createMediaStreamSource(self._stream);
+    recorder = self._audioContext.createScriptProcessor(1024, 1, 1);
+    audioInput.connect(volume);
+
+    recorder.onaudioprocess = function(e) {
+        if (self._mediaRecorder.state === QBMediaRecorder._STATES[1]) {
+            self._buffer.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+            self._recordingLength += 1024;
+        }
+    };
+
+    volume.connect(recorder);
+    recorder.connect(self._audioContext.destination);
+};
+
+QBMediaRecorder.prototype._closeAudioProcess = function() {
+    var self = this;
+
+    if (!!self._audioContext) {
+        self._audioContext.close()
+            .then(function() {
+                self._audioContext = null;
+                self._recordingLength = 0;
+                self._buffer = [];
+            });
+    }
+};
+
+QBMediaRecorder.prototype._stopAudioProcess = function() {
+    var self = this;
+
+    self._recordedChunks = self._getBlobData();
+    self._closeAudioProcess();
+};
+
+QBMediaRecorder.prototype._encodeMP3 = function(buffer) {
+    var data = new Int16Array(buffer),
+        mp3encoder = new lamejs.Mp3Encoder(1, 48000, 128),
+        encodedBuffer = mp3encoder.encodeBuffer(data),
+        flushedBuffer = mp3encoder.flush(),
+        mp3Data = [];
+
+    mp3Data.push(encodedBuffer);
+    mp3Data.push(new Int8Array(flushedBuffer));
+
+    return mp3Data;
+};
+
+QBMediaRecorder.prototype._encodeWAV = function(samples) {
+    var buffer = new ArrayBuffer(44 + samples.length * 2),
+        view = new DataView(buffer);
+
+    _writeString(view, 0, 'RIFF');
+    view.setUint32(4, 32 + samples.length * 2, true);
+    _writeString(view, 8, 'WAVE');
+    _writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, this.sampleRate, true);
+    view.setUint32(28, this.sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    _writeString(view, 36, 'data');
+    view.setUint32(40, samples.length * 2, true);
+
+    _floatTo16BitPCM(view, 44, samples);
+
+    function _floatTo16BitPCM(output, offset, input) {
+        for (var i = 0; i < input.length; i++, offset += 2) {
+            var s = Math.max(-1, Math.min(1, input[i]));
+            output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        }
+    }
+
+    function _writeString(view, offset, string) {
+        for (var i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    return view;
+};
+
+QBMediaRecorder.prototype._getBlobData = function() {
+    var self = this,
+        result = new Float32Array(self._recordingLength),
+        bufferLength = self._buffer.length,
+        offset = 0,
+        buffer,
+        view,
+        data;
+
+    for (var i = 0; i < bufferLength; i++){
+        buffer = self._buffer[i];
+        result.set(buffer, offset);
+        offset += buffer.length;
+    }
+
+    view = self._encodeWAV(result);
+
+    switch(self._customMimeType) {
+        case 'audio/wav':
+            data = [view];
+            break;
+
+        case 'audio/mp3':
+            data = self._encodeMP3(view.buffer);
+            break;
+
+        default:
+            throw new Error(ERRORS.unsupportMediaRecorderWithOptions);
+            break;
+    }
+
+    return data;
 };
 
 module.exports = QBMediaRecorder;
