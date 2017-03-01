@@ -285,8 +285,7 @@ inputCard.init()
                 onstop: function onStoppedRecording(blob) {
                     resultCard.blob = blob;
                     resultCard.attachVideo(blob);
-                },
-                mimeType: 'audio/mp3'
+                }
             };
 
         var rec = new QBMediaRecorder(opts);

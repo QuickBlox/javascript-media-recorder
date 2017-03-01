@@ -5,8 +5,8 @@ var ERRORS = require('./errors');
 /**
  * @constructor QBMediaRecorder
  * @param {Object}   [opts] - Object of parameters.
- * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm';
- * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback.
+ * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);
+ * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback (Isn't need to use with 'audio/wav' of 'audio/mp3').
  * @param {Boolean}  opts[].ignoreMutedMedia=true - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
  * @param {Function} opts[].onstart - Called to handle the start event.
  * @param {Function} opts[].onstop - Called to handle the stop event.
@@ -14,7 +14,7 @@ var ERRORS = require('./errors');
  * @param {Function} opts[].onresume - Called to handle the resume event.
  * @param {Function} opts[].onerror - Called to handle an ErrorEvent.
  * @param {Function} opts[].onchange - Called to handle the change a stream event.
- * @param {Function} opts[].ondataavailable - Called to handle the dataavailable event. The Blob of recorded data is contained in this event.
+ * @param {Function} opts[].ondataavailable - Called to handle the dataavailable event. The Blob of recorded data is contained in this event (Callback isn't supported if use 'audio/wav' of 'audio/mp3' for recording).
  *
  * @example
  * var opts = {
@@ -23,12 +23,14 @@ var ERRORS = require('./errors');
  *     },
  *     onstop: function onStop(Blob) {
  *         videoElement.src = URL.createObjectURL(blob);
- *     }
+ *     },
+ *     mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.
  * };
  *
  * // uses as global variable, QBMediaRecorder is built as a UMD module.
  * var recorder = new QBMediaRecorder(opts);
  *
+ * @see For record 'audio/mp3' need to connect encoderMP3 (just connect {@link https://www.npmjs.com/package/lamejs|'lame.all.js'} or {@link https://www.npmjs.com/package/lamejs|'lame.min.js'} file to global environment) before init QBMediaRecorder.
  */
 function QBMediaRecorder(opts) {
     var prefferedMimeType = opts && opts.mimeType ? opts.mimeType : false;
@@ -68,7 +70,7 @@ QBMediaRecorder.prototype._setCustomRecorderTools = function () {
     self._recordingLength = 0;
 
     if (QBMediaRecorder._isMp3Encoder() && this._customMimeType === 'audio/mp3') {
-        self._mp3encoder = new window.lamejs.Mp3Encoder(1, 48000, 128);
+        self._mp3encoder = new lamejs.Mp3Encoder(1, 48000, 128);
     }
 };
 

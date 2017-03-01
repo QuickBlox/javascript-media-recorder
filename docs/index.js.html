@@ -44,8 +44,8 @@ var ERRORS = require('./errors');
 /**
  * @constructor QBMediaRecorder
  * @param {Object}   [opts] - Object of parameters.
- * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm';
- * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback.
+ * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);
+ * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback (Isn't need to use with 'audio/wav' of 'audio/mp3').
  * @param {Boolean}  opts[].ignoreMutedMedia=true - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
  * @param {Function} opts[].onstart - Called to handle the start event.
  * @param {Function} opts[].onstop - Called to handle the stop event.
@@ -53,7 +53,7 @@ var ERRORS = require('./errors');
  * @param {Function} opts[].onresume - Called to handle the resume event.
  * @param {Function} opts[].onerror - Called to handle an ErrorEvent.
  * @param {Function} opts[].onchange - Called to handle the change a stream event.
- * @param {Function} opts[].ondataavailable - Called to handle the dataavailable event. The Blob of recorded data is contained in this event.
+ * @param {Function} opts[].ondataavailable - Called to handle the dataavailable event. The Blob of recorded data is contained in this event (Callback isn't supported if use 'audio/wav' of 'audio/mp3' for recording).
  *
  * @example
  * var opts = {
@@ -62,19 +62,23 @@ var ERRORS = require('./errors');
  *     },
  *     onstop: function onStop(Blob) {
  *         videoElement.src = URL.createObjectURL(blob);
- *     }
+ *     },
+ *     mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.
  * };
  *
  * // uses as global variable, QBMediaRecorder is built as a UMD module.
  * var recorder = new QBMediaRecorder(opts);
  *
+ * @see For record 'audio/mp3' need to connect encoderMP3 (just connect {@link https://www.npmjs.com/package/lamejs|'lame.all.js'} or {@link https://www.npmjs.com/package/lamejs|'lame.min.js'} file to global environment) before init QBMediaRecorder.
  */
 function QBMediaRecorder(opts) {
-    if(!QBMediaRecorder.isAvailable()) {
+    var prefferedMimeType = opts &amp;&amp; opts.mimeType ? opts.mimeType : false;
+    this._customMimeType = (prefferedMimeType === 'audio/wav') ? 'audio/wav' :
+                           (prefferedMimeType === 'audio/mp3') ? 'audio/mp3' : false;
+
+    if(!QBMediaRecorder.isAvailable() &amp;&amp; !this._customMimeType) {
         throw new Error(ERRORS.unsupport);
     }
-
-    var prefferedMimeType = opts &amp;&amp; opts.mimeType ? opts.mimeType : false;
 
     this.mimeType = this._getMimeType(prefferedMimeType);
     this.timeslice = opts &amp;&amp; opts.timeslice &amp;&amp; isNaN(+opts.timeslice) ? opts.timeslice : 1000;
@@ -87,11 +91,27 @@ function QBMediaRecorder(opts) {
     this._recordedChunks = [];
     this._keepRecording = false;
 
-    if (window &amp;&amp; window.lamejs) {
-        this.mp3encoder = new window.lamejs.Mp3Encoder(1, 48000, 128);
-        console.log(this.mp3encoder);
+    if (this._customMimeType) {
+        this._setCustomRecorderTools();
     }
 }
+
+QBMediaRecorder.prototype._setCustomRecorderTools = function () {
+    if(!QBMediaRecorder._isAudioContext()) {
+        throw new Error(ERRORS.unsupport);
+    }
+
+    var self = this;
+
+    self.mimeType = self._customMimeType;
+    self._audioContext = null;
+    self._buffer = [];
+    self._recordingLength = 0;
+
+    if (QBMediaRecorder._isMp3Encoder() &amp;&amp; this._customMimeType === 'audio/mp3') {
+        self._mp3encoder = new lamejs.Mp3Encoder(1, 48000, 128);
+    }
+};
 
 QBMediaRecorder.prototype._getMimeType = function (preffered) {
     var mimeType,
@@ -136,8 +156,16 @@ QBMediaRecorder._STATES = ['inactive', 'recording', 'paused'];
  *     // ... show UI for recording
  * }
  */
-QBMediaRecorder.isAvailable = function(){
+QBMediaRecorder.isAvailable = function() {
     return !!(window &amp;&amp; window.MediaRecorder &amp;&amp; typeof window.MediaRecorder.isTypeSupported === 'function' &amp;&amp; window.Blob);
+};
+
+QBMediaRecorder._isAudioContext = function () {
+    return !!(window &amp;&amp; (window.AudioContext || window.webkitAudioContext));
+};
+
+QBMediaRecorder._isMp3Encoder = function () {
+    return !!(window &amp;&amp; (window.AudioContext || window.webkitAudioContext) &amp;&amp; window.lamejs);
 };
 
 /**
@@ -151,6 +179,8 @@ QBMediaRecorder.isAvailable = function(){
  * }
  */
 QBMediaRecorder.isTypeSupported = function(mimeType) {
+    var result = false;
+
     if(!QBMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
     }
@@ -159,7 +189,25 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
         throw new Error(ERRORS.requreArgument);
     }
 
-    return window.MediaRecorder.isTypeSupported(mimeType);
+    switch(mimeType) {
+        case 'audio/wav':
+            if (QBMediaRecorder._isAudioContext()) {
+                result = true;
+            }
+            break;
+
+        case 'audio/mp3':
+            if (QBMediaRecorder._isAudioContext() &amp;&amp; QBMediaRecorder._isMp3Encoder()) {
+                result = true;
+            }
+            break;
+
+        default:
+            result = window.MediaRecorder.isTypeSupported(mimeType);
+            break;
+    }
+
+    return result;
 };
 
 /**
@@ -243,11 +291,14 @@ QBMediaRecorder.prototype.start = function(stream) {
     }
     // TODO: need to stream.clone
     self._stream = stream;
-
     self._mediaRecorder = null;
     self._recordedChunks.length = 0;
 
-    self._setMediaRecorder();
+    if (self._customMimeType) {
+        self._setCustomRecorder();
+    } else {
+        self._setMediaRecorder();
+    }
     self._setEvents();
 };
 
@@ -264,6 +315,89 @@ QBMediaRecorder.prototype._setMediaRecorder = function () {
 
         self._mediaRecorder = new window.MediaRecorder(self._stream);
     }
+};
+
+QBMediaRecorder.prototype._setCustomRecorder = function() {
+    var self = this;
+
+    self._closeAudioProcess();
+
+    self._mediaRecorder = {
+        start: function() {
+            try {
+                this.state = 'recording';
+                self._startAudioProcess();
+                this.onstart();
+            } catch(error) {
+                this.onerror(error);
+            }
+        },
+
+        stop: function() {
+            try {
+                this.state = 'stopped';
+                self._stopAudioProcess();
+                this.onstop();
+            } catch(error) {
+                this.onerror(error);
+            }
+        },
+
+        pause: function() {
+            try {
+                this.state = 'paused';
+                this.onpause();
+            } catch(error) {
+                this.onerror(error);
+            }
+        },
+
+        resume: function() {
+            try {
+                this.state = 'recording';
+                this.onresume();
+            } catch(error) {
+                this.onerror(error);
+            }
+        },
+
+        /* callbacks */
+        onstart: function() {
+            if (this.state !== 'recording') {
+                this.state = 'recording';
+            }
+        },
+
+        onstop: function() {
+            if (this.state !== 'stopped') {
+                this.state = 'stopped';
+            }
+        },
+
+        onpause: function() {
+            if (this.state !== 'paused') {
+                this.state = 'paused';
+            }
+        },
+
+        onresume: function() {
+            if (this.state !== 'recording') {
+                this.state = 'recording';
+            }
+        },
+
+        onerror: function() {
+            try {
+                self._closeAudioProcess();
+            } catch(error) {
+                throw new Error(error);
+            }
+        },
+
+        ondataavailable: function() {
+            this.onerror( new Error(ERRORS.ondataavailableIsOff) );
+        }
+    };
 };
 
 QBMediaRecorder.prototype._setEvents = function() {
@@ -331,7 +465,6 @@ QBMediaRecorder.prototype._setEvents = function() {
     };
 
     self._mediaRecorder.onstop = function() {
-        console.log(self._recordedChunks);
         var blob = new Blob(self._recordedChunks, {
             'type' : self.mimeType
         });
@@ -339,7 +472,6 @@ QBMediaRecorder.prototype._setEvents = function() {
         self.recordedBlobs.push(blob);
 
         if(!self._keepRecording) {
-
             if(self.recordedBlobs.length > 1) {
                 fireCallback('onstop', blob);
             } else {
@@ -363,7 +495,7 @@ QBMediaRecorder.prototype.stop = function() {
     var mediaRecorder = this._mediaRecorder,
         mediaRecorderState = mediaRecorder &amp;&amp; mediaRecorder.state ? mediaRecorder.state : 'inactive';
 
-    if(mediaRecorder &amp;&amp; mediaRecorderState === 'recording'){
+    if(mediaRecorder &amp;&amp; (mediaRecorderState === 'recording' || mediaRecorderState === 'paused')){
         mediaRecorder.stop();
     } else {
         console.warn(ERRORS.actionFailed);
@@ -419,7 +551,12 @@ QBMediaRecorder.prototype.change = function(stream) {
     // TODO stream.clone
     self._stream = stream;
 
-    self._setMediaRecorder();
+    if (self._customMimeType) {
+        self._setCustomRecorder();
+    } else {
+        self._setMediaRecorder();
+    }
+
     self._setEvents();
 };
 
@@ -500,6 +637,141 @@ QBMediaRecorder.prototype._getExtension = function() {
     return extension;
 };
 
+
+QBMediaRecorder.prototype._startAudioProcess = function() {
+    if(!QBMediaRecorder._isAudioContext()) {
+        throw new Error(ERRORS.unsupport);
+    }
+
+    var self = this,
+        audioContext,
+        audioInput,
+        recorder,
+        volume;
+
+    self._closeAudioProcess();
+
+    audioContext = window.AudioContext || window.webkitAudioContext;
+    self._audioContext = new audioContext;
+    volume = self._audioContext.createGain();
+    audioInput = self._audioContext.createMediaStreamSource(self._stream);
+    recorder = self._audioContext.createScriptProcessor(1024, 1, 1);
+    audioInput.connect(volume);
+
+    recorder.onaudioprocess = function(e) {
+        if (self._mediaRecorder.state === QBMediaRecorder._STATES[1]) {
+            self._buffer.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+            self._recordingLength += 1024;
+        }
+    };
+
+    volume.connect(recorder);
+    recorder.connect(self._audioContext.destination);
+};
+
+QBMediaRecorder.prototype._closeAudioProcess = function() {
+    var self = this;
+
+    if (!!self._audioContext) {
+        self._audioContext.close()
+            .then(function() {
+                self._audioContext = null;
+                self._recordingLength = 0;
+                self._buffer = [];
+            });
+    }
+};
+
+QBMediaRecorder.prototype._stopAudioProcess = function() {
+    var self = this;
+
+    self._recordedChunks = self._getBlobData();
+    self._closeAudioProcess();
+};
+
+QBMediaRecorder.prototype._encodeMP3 = function(buffer) {
+    var data = new Int16Array(buffer),
+        mp3encoder = new lamejs.Mp3Encoder(1, 48000, 128),
+        encodedBuffer = mp3encoder.encodeBuffer(data),
+        flushedBuffer = mp3encoder.flush(),
+        mp3Data = [];
+
+    mp3Data.push(encodedBuffer);
+    mp3Data.push(new Int8Array(flushedBuffer));
+
+    return mp3Data;
+};
+
+QBMediaRecorder.prototype._encodeWAV = function(samples) {
+    var buffer = new ArrayBuffer(44 + samples.length * 2),
+        view = new DataView(buffer);
+
+    _writeString(view, 0, 'RIFF');
+    view.setUint32(4, 32 + samples.length * 2, true);
+    _writeString(view, 8, 'WAVE');
+    _writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, this.sampleRate, true);
+    view.setUint32(28, this.sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    _writeString(view, 36, 'data');
+    view.setUint32(40, samples.length * 2, true);
+
+    _floatTo16BitPCM(view, 44, samples);
+
+    function _floatTo16BitPCM(output, offset, input) {
+        for (var i = 0; i &lt; input.length; i++, offset += 2) {
+            var s = Math.max(-1, Math.min(1, input[i]));
+            output.setInt16(offset, s &lt; 0 ? s * 0x8000 : s * 0x7FFF, true);
+        }
+    }
+
+    function _writeString(view, offset, string) {
+        for (var i = 0; i &lt; string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    return view;
+};
+
+QBMediaRecorder.prototype._getBlobData = function() {
+    var self = this,
+        result = new Float32Array(self._recordingLength),
+        bufferLength = self._buffer.length,
+        offset = 0,
+        buffer,
+        view,
+        data;
+
+    for (var i = 0; i &lt; bufferLength; i++){
+        buffer = self._buffer[i];
+        result.set(buffer, offset);
+        offset += buffer.length;
+    }
+
+    view = self._encodeWAV(result);
+
+    switch(self._customMimeType) {
+        case 'audio/wav':
+            data = [view];
+            break;
+
+        case 'audio/mp3':
+            data = self._encodeMP3(view.buffer);
+            break;
+
+        default:
+            throw new Error(ERRORS.unsupportMediaRecorderWithOptions);
+            break;
+    }
+
+    return data;
+};
+
 module.exports = QBMediaRecorder;</code></pre>
         </article>
     </section>
@@ -512,7 +784,7 @@ module.exports = QBMediaRecorder;</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Feb 24 2017 19:08:11 GMT+0200 (Финляндия (зима)) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Mar 01 2017 17:55:31 GMT+0200 (Финляндия (зима)) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

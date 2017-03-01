@@ -96,6 +96,13 @@
     
 
     
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>For record 'audio/mp3' need to connect encoderMP3 (just connect <a href="https://www.npmjs.com/package/lamejs">'lame.all.js'</a> or <a href="https://www.npmjs.com/package/lamejs">'lame.min.js'</a> file to global environment) before init QBMediaRecorder.</li>
+        </ul>
+    </dd>
+    
 
     
 </dl>
@@ -114,7 +121,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var opts = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    }};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
+    <pre class="prettyprint"><code>var opts = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
 
 
 
@@ -222,7 +229,7 @@
                 </td>
             
 
-            <td class="description last"><p>Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm';</p></td>
+            <td class="description last"><p>Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);</p></td>
         </tr>
 
     
@@ -251,7 +258,7 @@
                 </td>
             
 
-            <td class="description last"><p>The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback.</p></td>
+            <td class="description last"><p>The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback (Isn't need to use with 'audio/wav' of 'audio/mp3').</p></td>
         </tr>
 
     
@@ -469,7 +476,7 @@
                 </td>
             
 
-            <td class="description last"><p>Called to handle the dataavailable event. The Blob of recorded data is contained in this event.</p></td>
+            <td class="description last"><p>Called to handle the dataavailable event. The Blob of recorded data is contained in this event (Callback isn't supported if use 'audio/wav' of 'audio/mp3' for recording).</p></td>
         </tr>
 
     
@@ -533,7 +540,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line100">line 100</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line120">line 120</a>
     </li></ul></dd>
     
 
@@ -644,7 +651,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line114">line 114</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line142">line 142</a>
     </li></ul></dd>
     
 
@@ -806,7 +813,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line135">line 135</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line183">line 183</a>
     </li></ul></dd>
     
 
@@ -986,7 +993,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line160">line 160</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line208">line 208</a>
     </li></ul></dd>
     
 
@@ -1097,7 +1104,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line189">line 189</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line237">line 237</a>
     </li></ul></dd>
     
 
@@ -1253,7 +1260,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line323">line 323</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line455">line 455</a>
     </li></ul></dd>
     
 
@@ -1359,7 +1366,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line338">line 338</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line470">line 470</a>
     </li></ul></dd>
     
 
@@ -1461,7 +1468,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line352">line 352</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line484">line 484</a>
     </li></ul></dd>
     
 
@@ -1563,7 +1570,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line367">line 367</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line499">line 499</a>
     </li></ul></dd>
     
 
@@ -1714,7 +1721,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line399">line 399</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line536">line 536</a>
     </li></ul></dd>
     
 
@@ -1928,7 +1935,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Feb 24 2017 19:08:11 GMT+0200 (Финляндия (зима)) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Mar 01 2017 17:55:31 GMT+0200 (Финляндия (зима)) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
