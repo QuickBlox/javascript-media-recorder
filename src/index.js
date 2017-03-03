@@ -6,7 +6,7 @@ var ERRORS = require('./errors');
  * @constructor QBMediaRecorder
  * @param {Object}   [opts] - Object of parameters.
  * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);
- * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback (Isn't need to use with 'audio/wav' of 'audio/mp3').
+ * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback (isn't need to use with 'audio/wav' of 'audio/mp3').
  * @param {Boolean}  opts[].ignoreMutedMedia=true - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
  * @param {Function} opts[].onstart - Called to handle the start event.
  * @param {Function} opts[].onstop - Called to handle the stop event.
@@ -286,7 +286,7 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
     self._mediaRecorder = {
         start: function() {
             try {
-                this.state = 'recording';
+                this.state = QBMediaRecorder._STATES[1];
                 self._startAudioProcess();
                 this.onstart();
             } catch(error) {
@@ -296,7 +296,7 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
 
         stop: function() {
             try {
-                this.state = 'stopped';
+                this.state = QBMediaRecorder._STATES[0];
                 self._stopAudioProcess();
                 this.onstop();
             } catch(error) {
@@ -306,7 +306,7 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
 
         pause: function() {
             try {
-                this.state = 'paused';
+                this.state = QBMediaRecorder._STATES[2];
                 this.onpause();
             } catch(error) {
                 this.onerror(error);
@@ -315,7 +315,7 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
 
         resume: function() {
             try {
-                this.state = 'recording';
+                this.state = QBMediaRecorder._STATES[1];
                 this.onresume();
             } catch(error) {
                 this.onerror(error);
@@ -325,25 +325,25 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
         /* callbacks */
         onstart: function() {
             if (this.state !== 'recording') {
-                this.state = 'recording';
+                this.state = QBMediaRecorder._STATES[1];
             }
         },
 
         onstop: function() {
-            if (this.state !== 'stopped') {
-                this.state = 'stopped';
+            if (this.state !== 'inactive') {
+                this.state = QBMediaRecorder._STATES[0];
             }
         },
 
         onpause: function() {
             if (this.state !== 'paused') {
-                this.state = 'paused';
+                this.state = QBMediaRecorder._STATES[2];
             }
         },
 
         onresume: function() {
             if (this.state !== 'recording') {
-                this.state = 'recording';
+                this.state = QBMediaRecorder._STATES[1];
             }
         },
 
@@ -353,10 +353,6 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
             } catch(error) {
                 throw new Error(error);
             }
-        },
-
-        ondataavailable: function() {
-            this.onerror( new Error(ERRORS.ondataavailableIsOff) );
         }
     };
 };
@@ -374,12 +370,14 @@ QBMediaRecorder.prototype._setEvents = function() {
         }
     }
 
-    self._mediaRecorder.ondataavailable = function(e) {
-        if(e.data && e.data.size > 0) {
-            self._recordedChunks.push(e.data);
-            fireCallback('ondataavailable', e);
-        }
-    };
+    if (typeof self._mediaRecorder.ondataavailable === 'function') {
+        self._mediaRecorder.ondataavailable = function(e) {
+            if(e.data && e.data.size > 0) {
+                self._recordedChunks.push(e.data);
+                fireCallback('ondataavailable', e);
+            }
+        };
+    }
 
     self._mediaRecorder.onpause = function() {
         fireCallback('onpause');
@@ -416,7 +414,7 @@ QBMediaRecorder.prototype._setEvents = function() {
                 break;
         }
 
-        if(self._mediaRecorder.state !== 'inactive' && self._mediaRecorder.state !== 'stopped') {
+        if(self._mediaRecorder.state !== 'inactive') {
             self._mediaRecorder.stop();
         }
 

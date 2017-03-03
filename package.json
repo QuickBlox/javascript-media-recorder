@@ -1,5 +1,5 @@
 {
-  "name": "media-recorder-js",
+  "name": "QMMediaRecorder",
   "version": "0.3.0",
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
@@ -28,8 +28,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-uglify": "^2.0.0",
     "jsdoc": "^3.4.3",
-    "vinyl-source-stream": "^1.1.0",
-    "lamejs": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0"
   },
   "keywords": [
     "record",

@@ -39,5 +39,5 @@ jspm_packages
 # Sublime generated files
 *.sublime-*
 
-# webShtorm/phpShtorm generated files
+# webStorm/phpStorm generated files
 .idea/
