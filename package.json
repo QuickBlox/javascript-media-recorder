@@ -31,9 +31,10 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "keywords": [
+    "audio",
+    "video",
     "record",
-    "mediastream",
-    "webrtc"
+    "mediastream"
   ],
   "contributors": [
     {

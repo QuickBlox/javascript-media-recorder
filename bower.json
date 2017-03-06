@@ -9,9 +9,10 @@
   ],
   "license": "(Apache-2.0)",
   "keywords": [
+    "audio",
+    "video",
     "record",
-    "mediastream",
-    "webrtc"
+    "mediastream"
   ],
   "homepage": "https://github.com/QuickBlox/javascript-media-recorder",
   "ignore": [
