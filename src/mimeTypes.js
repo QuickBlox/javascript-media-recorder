@@ -4,7 +4,9 @@ module.exports = {
     'audio': [
         'audio/webm;codecs=opus',
         'audio/webm',
-        'audio/ogg'
+        'audio/ogg',
+        'audio/wav',
+        'audio/mp3'
     ],
     'video': [
         'video/webm;codecs=h264',

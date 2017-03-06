@@ -1,6 +1,6 @@
 /* JSHint inline rules */
 /* jshint node: true, browser: true */
-/* globals qbMediaRecorder, Promise */
+/* globals QBMediaRecorder, Promise */
 
 'use strict';
 
@@ -288,7 +288,7 @@ inputCard.init()
                 }
             };
 
-        var rec = new qbMediaRecorder(opts);
+        var rec = new QBMediaRecorder(opts);
 
         resultCard.setupListeners();
 

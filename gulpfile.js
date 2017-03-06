@@ -12,7 +12,7 @@ var notify = require('gulp-notify');
 gulp.task('build', function() {
     return browserify('./src/index.js', {
             'debug': true,
-            'standalone': 'qbMediaRecorder'
+            'standalone': 'QBMediaRecorder'
         })
         .bundle()
         .on('error', function(error) {

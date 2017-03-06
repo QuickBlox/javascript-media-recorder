@@ -1,23 +1,23 @@
-# qbMediaRecorderJS
-The qbMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
+# QBMediaRecorderJS
+The QBMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
 
 Extendings methods:
- - [isAvailable](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#.isAvailable);
- - [getSupportedMimeTypes](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#.getSupportedMimeTypes);
- - [change](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#change);
- - [download](https://quickblox.github.io/javascript-media-recorder/docs/qbMediaRecorder.html#download).
+ - [isAvailable](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#.isAvailable);
+ - [getSupportedMimeTypes](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#.getSupportedMimeTypes);
+ - [change](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#change);
+ - [download](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#download).
 
 See [docs](https://quickblox.github.io/javascript-media-recorder/docs/) - all public API.
 Check our [sample](https://quickblox.github.io/javascript-media-recorder/sample/), use a few source (video / audio).
 
 ### Support
-The qbMediaRecorder supports Firefox 49, Chrome 49 / Chrome for Android 53, Opera 41.
+The QBMediaRecorder supports Firefox 49, Chrome 49 / Chrome for Android 53, Opera 41.
 
 ### Usage
-The qbMediaRecorder is built as a UMD module and can be loaded via CDN, NPM, or from source.
+The QBMediaRecorder is built as a UMD module and can be loaded via CDN, NPM, or from source.
 
 #### Install 
-You can use CDN (by [UNPKG](https://unpkg.com)) to deliver the qbMediaRecorder.
+You can use CDN (by [UNPKG](https://unpkg.com)) to deliver the QBMediaRecorder.
 ```html
 <script src='https://unpkg.com/media-recorder-js/mediaRecorder.js'></script>
 ```
