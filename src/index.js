@@ -383,7 +383,7 @@ QBMediaRecorder.prototype._setEvents = function() {
         }
     }
 
-    if (typeof self._mediaRecorder.ondataavailable === 'function') {
+    if (!self._customMimeType) {
         self._mediaRecorder.ondataavailable = function(e) {
             if(e.data && e.data.size > 0) {
                 self._recordedChunks.push(e.data);
