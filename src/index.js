@@ -1,5 +1,8 @@
 'use strict';
 
+/*global lamejs, Float32Array, Int16Array, Int8Array, ArrayBuffer, DataView */
+
+
 var ERRORS = require('./errors');
 
 /**
@@ -642,7 +645,7 @@ QBMediaRecorder.prototype._startAudioProcess = function() {
 QBMediaRecorder.prototype._closeAudioProcess = function() {
     var self = this;
 
-    if (!!self._audioContext) {
+    if (self._audioContext) {
         self._audioContext.close()
             .then(function() {
                 self._audioContext = null;
@@ -736,7 +739,6 @@ QBMediaRecorder.prototype._getBlobData = function() {
 
         default:
             throw new Error(ERRORS.unsupportMediaRecorderWithOptions);
-            break;
     }
 
     return data;

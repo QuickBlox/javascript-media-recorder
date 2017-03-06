@@ -1,6 +1,6 @@
 {
   "name": "QMMediaRecorder",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
   "scripts": {
@@ -34,5 +34,17 @@
     "record",
     "mediastream",
     "webrtc"
+  ],
+  "contributors": [
+    {
+      "name": "dimaspirit",
+      "url": "https://github.com/dimaspirit",
+      "email": "dspwww@gmail.com"
+    },
+    {
+      "name": "Vladlukhanin",
+      "url": "https://github.com/Vladlukhanin",
+      "email": "vladlukhanin@gmail.com"
+    }
   ]
 }
