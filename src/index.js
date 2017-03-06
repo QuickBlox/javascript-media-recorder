@@ -65,12 +65,22 @@ QBMediaRecorder.prototype._setCustomRecorderTools = function () {
     var self = this;
 
     self.mimeType = self._customMimeType;
+    /*
+    * context = new AudioContext();
+    * context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOutputChannels);
+    *
+    * link: https://developer.mozilla.org/ru/docs/Web/API/AudioContext/createScriptProcessor
+    */
+    self.BUFFER_SIZE = 2048; // the buffer size in units of sample-frames.
+    self.INPUT_CHANNELS = 1; // the number of channels for this node's input, defaults to 2
+    self.OUTPUT_CHANNELS = 1; // the number of channels for this node's output, defaults to 2
     self._audioContext = null;
+
     self._buffer = [];
     self._recordingLength = 0;
 
     if (QBMediaRecorder._isMp3Encoder() && this._customMimeType === 'audio/mp3') {
-        self._mp3encoder = new lamejs.Mp3Encoder(1, 48000, 128);
+        self._mp3encoder = new lamejs.Mp3Encoder(1, 48000, 256);
     }
 };
 
@@ -612,15 +622,16 @@ QBMediaRecorder.prototype._startAudioProcess = function() {
 
     audioContext = window.AudioContext || window.webkitAudioContext;
     self._audioContext = new audioContext;
+
     volume = self._audioContext.createGain();
     audioInput = self._audioContext.createMediaStreamSource(self._stream);
-    recorder = self._audioContext.createScriptProcessor(1024, 1, 1);
+    recorder = self._audioContext.createScriptProcessor(self.BUFFER_SIZE, self.INPUT_CHANNELS, self.OUTPUT_CHANNELS);
     audioInput.connect(volume);
 
     recorder.onaudioprocess = function(e) {
         if (self._mediaRecorder.state === QBMediaRecorder._STATES[1]) {
             self._buffer.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-            self._recordingLength += 1024;
+            self._recordingLength += self.BUFFER_SIZE;
         }
     };
 
@@ -649,10 +660,10 @@ QBMediaRecorder.prototype._stopAudioProcess = function() {
 };
 
 QBMediaRecorder.prototype._encodeMP3 = function(buffer) {
-    var data = new Int16Array(buffer),
-        mp3encoder = new lamejs.Mp3Encoder(1, 48000, 128),
-        encodedBuffer = mp3encoder.encodeBuffer(data),
-        flushedBuffer = mp3encoder.flush(),
+    var self = this,
+        data = new Int16Array(buffer),
+        encodedBuffer = self._mp3encoder.encodeBuffer(data),
+        flushedBuffer = self._mp3encoder.flush(),
         mp3Data = [];
 
     mp3Data.push(encodedBuffer);
