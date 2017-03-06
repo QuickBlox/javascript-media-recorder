@@ -1,5 +1,5 @@
 {
-  "name": "QMMediaRecorder",
+  "name": "media-recorder-js",
   "version": "1.0.0",
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
