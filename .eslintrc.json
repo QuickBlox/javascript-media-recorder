@@ -10,6 +10,6 @@
         "valid-jsdoc": 1,
         "indent": ["warn", 4, { "SwitchCase": 1 }],
         "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
-        "no-console": ["error", { "allow": ["warn", "error"] }]
+        "no-console": ["error", { "allow": ["info", "warn", "error"] }]
     }
 }
