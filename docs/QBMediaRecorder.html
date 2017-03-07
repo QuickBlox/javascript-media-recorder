@@ -121,7 +121,18 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var opts = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
+    <pre class="prettyprint"><code>var opts = {
+    onstart: function onStart() { // Use named function.
+        console.log('Recorder is started');
+    },
+    onstop: function onStop(Blob) {
+        videoElement.src = URL.createObjectURL(blob);
+    },
+    mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.
+};
+
+// uses as global variable, QBMediaRecorder is built as a UMD module.
+var recorder = new QBMediaRecorder(opts);</code></pre>
 
 
 
@@ -593,7 +604,9 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>if(QBMediaRecorder.isAvailable()) {    // ... show UI for recording}</code></pre>
+    <pre class="prettyprint"><code>if(QBMediaRecorder.isAvailable()) {
+    // ... show UI for recording
+}</code></pre>
 
 
 
@@ -704,7 +717,9 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>if( QBMediaRecorder.isTypeSupported('video/mp4') ) {    el.textContent = 'Will be record in video/mp4';}</code></pre>
+    <pre class="prettyprint"><code>if( QBMediaRecorder.isTypeSupported('video/mp4') ) {
+    el.textContent = 'Will be record in video/mp4';
+}</code></pre>
 
 
 
@@ -866,7 +881,8 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var type = QBMediaRecorder.getSupportedMimeTypes('audio');console.info(`Call will recording in ${type[0]}`);</code></pre>
+    <pre class="prettyprint"><code>var type = QBMediaRecorder.getSupportedMimeTypes('audio');
+console.info(`Call will recording in ${type[0]}`);</code></pre>
 
 
 
@@ -1046,7 +1062,12 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var recorder = new QBMediaRecorder();// ...some codeif(recorder.getState() == 'recording') {    console.info('You are still recording.');}</code></pre>
+    <pre class="prettyprint"><code>var recorder = new QBMediaRecorder();
+// ...some code
+
+if(recorder.getState() == 'recording') {
+    console.info('You are still recording.');
+}</code></pre>
 
 
 
@@ -1157,7 +1178,21 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;                setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
+    <pre class="prettyprint"><code>var options = {
+    onstart: function onStart() {
+        var time = 0,
+            step = 1000;
+        
+        setTimeout(function () {
+            time += step;
+            console.info(`You are recording ${time} sec.`);
+        }, step);
+    }
+}
+
+var rec = new qbRecorder(options);
+// ...
+rec.start(stream);</code></pre>
 
 
 
@@ -1774,7 +1809,10 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var rec = new qbRecorder();rec.start(stream);// ...rec.download(false); // Set false, name will be generated based on Date.now()</code></pre>
+    <pre class="prettyprint"><code>var rec = new qbRecorder();
+rec.start(stream);
+// ...
+rec.download(false); // Set false, name will be generated based on Date.now()</code></pre>
 
 
 
