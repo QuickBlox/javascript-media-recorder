@@ -27,7 +27,7 @@ var ERRORS = require('./errors');
  *     onstop: function onStop(Blob) {
  *         videoElement.src = URL.createObjectURL(blob);
  *     },
- *     mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.
+ *     mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 1.0.0.
  * };
  *
  * // uses as global variable, QBMediaRecorder is built as a UMD module.
