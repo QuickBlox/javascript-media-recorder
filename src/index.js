@@ -370,34 +370,36 @@ QBMediaRecorder.prototype._setCustomRecorder = function() {
     };
 };
 
-QBMediaRecorder.prototype._setEvents = function() {
+QBMediaRecorder.prototype._fireCallback = function(name, args) {
     var self = this;
 
-    function fireCallback(name, args) {
-        if(Object.keys(self.callbacks).length !== 0 && typeof self.callbacks[name] === 'function') {
-            try {
-                self.callbacks[name](args);
-            } catch(e) {
-                console.error('Founded an error in callback:' + name, e);
-            }
+    if(Object.keys(self.callbacks).length !== 0 && typeof self.callbacks[name] === 'function') {
+        try {
+            self.callbacks[name](args);
+        } catch(e) {
+            console.error('Founded an error in callback:' + name, e);
         }
     }
+};
+
+QBMediaRecorder.prototype._setEvents = function() {
+    var self = this;
 
     if (!self._customMimeType) {
         self._mediaRecorder.ondataavailable = function(e) {
             if(e.data && e.data.size > 0) {
                 self._recordedChunks.push(e.data);
-                fireCallback('ondataavailable', e);
+                self._fireCallback('ondataavailable', e);
             }
         };
     }
 
     self._mediaRecorder.onpause = function() {
-        fireCallback('onpause');
+        self._fireCallback('onpause');
     };
 
     self._mediaRecorder.onresume = function() {
-        fireCallback('onresume');
+        self._fireCallback('onresume');
     };
 
     self._mediaRecorder.onerror = function(error) {
@@ -432,7 +434,7 @@ QBMediaRecorder.prototype._setEvents = function() {
         }
 
         if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
-            fireCallback('onerror', error);
+            self._fireCallback('onerror', error);
         }
     };
 
@@ -445,9 +447,9 @@ QBMediaRecorder.prototype._setEvents = function() {
 
         if(!self._keepRecording) {
             if(self.recordedBlobs.length > 1) {
-                fireCallback('onstop', blob);
+                self._fireCallback('onstop', blob);
             } else {
-                fireCallback('onstop', self.recordedBlobs[0]);
+                self._fireCallback('onstop', self.recordedBlobs[0]);
             }
         }
 
@@ -456,7 +458,7 @@ QBMediaRecorder.prototype._setEvents = function() {
 
     self._mediaRecorder.start(self.timeslice);
 
-    fireCallback('onstart');
+    self._fireCallback('onstart');
 };
 
 /**

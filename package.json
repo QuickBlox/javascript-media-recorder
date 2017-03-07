@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/QuickBlox/javascript-media-recorder#readme",
   "devDependencies": {
-    "browserify": "^13.3.0",
+    "browserify": "^14.1.0",
     "docdash": "^0.4.0",
     "gulp": "^3.9.1",
     "gulp-connect": "^5.0.0",
