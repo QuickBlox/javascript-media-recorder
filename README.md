@@ -1,4 +1,6 @@
 # QBMediaRecorderJS
+![Logo of QBMediaRecorderJS](/logo.png)
+
 The QBMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
 
 Extendings methods:
