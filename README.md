@@ -1,10 +1,8 @@
-<p align="center">
 ![Logo of QBMediaRecorderJS](https://raw.githubusercontent.com/QuickBlox/javascript-media-recorder/master/logo.png)
-</p>
 
 # QBMediaRecorderJS
 
->> The QBMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
+> The QBMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
 
 [![npm](https://img.shields.io/npm/v/media-recorder-js.svg)](https://www.npmjs.com/package/media-recorder-js)
 [![npm](https://img.shields.io/github/stars/QuickBlox/javascript-media-recorder.svg)](https://www.npmjs.com/package/media-recorder-js)
