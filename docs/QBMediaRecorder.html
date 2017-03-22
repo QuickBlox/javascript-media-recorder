@@ -99,7 +99,7 @@
     <dt class="tag-see">See:</dt>
     <dd class="tag-see">
         <ul>
-            <li>For record 'audio/mp3' need to connect encoderMP3 (just connect <a href="https://www.npmjs.com/package/lamejs">'lame.all.js'</a> or <a href="https://www.npmjs.com/package/lamejs">'lame.min.js'</a> file to global environment) before init QBMediaRecorder.</li>
+            <li>For record 'audio/mp3' need to connect encoderMP3.Just add <a href="https://www.npmjs.com/package/lamejs">'lame.min.js'</a> before init QBMediaRecorder.</li>
         </ul>
     </dd>
     
@@ -121,18 +121,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var opts = {
-    onstart: function onStart() { // Use named function.
-        console.log('Recorder is started');
-    },
-    onstop: function onStop(Blob) {
-        videoElement.src = URL.createObjectURL(blob);
-    },
-    mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 0.3.0.
-};
-
-// uses as global variable, QBMediaRecorder is built as a UMD module.
-var recorder = new QBMediaRecorder(opts);</code></pre>
+    <pre class="prettyprint"><code>var opts = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    mimeType: 'video/mp4'};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
 
 
 
@@ -551,7 +540,7 @@ var recorder = new QBMediaRecorder(opts);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line133">line 133</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line134">line 134</a>
     </li></ul></dd>
     
 
@@ -604,9 +593,7 @@ var recorder = new QBMediaRecorder(opts);</code></pre>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>if(QBMediaRecorder.isAvailable()) {
-    // ... show UI for recording
-}</code></pre>
+    <pre class="prettyprint"><code>if(QBMediaRecorder.isAvailable()) {    // ... show UI for recording}</code></pre>
 
 
 
@@ -664,7 +651,7 @@ var recorder = new QBMediaRecorder(opts);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line155">line 155</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line156">line 156</a>
     </li></ul></dd>
     
 
@@ -717,9 +704,7 @@ var recorder = new QBMediaRecorder(opts);</code></pre>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>if( QBMediaRecorder.isTypeSupported('video/mp4') ) {
-    el.textContent = 'Will be record in video/mp4';
-}</code></pre>
+    <pre class="prettyprint"><code>if( QBMediaRecorder.isTypeSupported('video/mp4') ) {    el.textContent = 'Will be record in video/mp4';}</code></pre>
 
 
 
@@ -828,7 +813,7 @@ var recorder = new QBMediaRecorder(opts);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line196">line 196</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line197">line 197</a>
     </li></ul></dd>
     
 
@@ -881,8 +866,7 @@ var recorder = new QBMediaRecorder(opts);</code></pre>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var type = QBMediaRecorder.getSupportedMimeTypes('audio');
-console.info(`Call will recording in ${type[0]}`);</code></pre>
+    <pre class="prettyprint"><code>var type = QBMediaRecorder.getSupportedMimeTypes('audio');console.info(`Call will recording in ${type[0]}`);</code></pre>
 
 
 
@@ -1009,7 +993,7 @@ console.info(`Call will recording in ${type[0]}`);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line221">line 221</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line222">line 222</a>
     </li></ul></dd>
     
 
@@ -1062,12 +1046,7 @@ console.info(`Call will recording in ${type[0]}`);</code></pre>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var recorder = new QBMediaRecorder();
-// ...some code
-
-if(recorder.getState() == 'recording') {
-    console.info('You are still recording.');
-}</code></pre>
+    <pre class="prettyprint"><code>var recorder = new QBMediaRecorder();// ...some codeif(recorder.getState() == 'recording') {    console.info('You are still recording.');}</code></pre>
 
 
 
@@ -1125,7 +1104,7 @@ if(recorder.getState() == 'recording') {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line250">line 250</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line251">line 251</a>
     </li></ul></dd>
     
 
@@ -1178,21 +1157,7 @@ if(recorder.getState() == 'recording') {
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var options = {
-    onstart: function onStart() {
-        var time = 0,
-            step = 1000;
-        
-        setTimeout(function () {
-            time += step;
-            console.info(`You are recording ${time} sec.`);
-        }, step);
-    }
-}
-
-var rec = new qbRecorder(options);
-// ...
-rec.start(stream);</code></pre>
+    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;                setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
 
 
 
@@ -1295,7 +1260,7 @@ rec.start(stream);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line468">line 468</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line469">line 469</a>
     </li></ul></dd>
     
 
@@ -1401,7 +1366,7 @@ rec.start(stream);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line483">line 483</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line484">line 484</a>
     </li></ul></dd>
     
 
@@ -1503,7 +1468,7 @@ rec.start(stream);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line497">line 497</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line498">line 498</a>
     </li></ul></dd>
     
 
@@ -1605,7 +1570,7 @@ rec.start(stream);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line512">line 512</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line513">line 513</a>
     </li></ul></dd>
     
 
@@ -1756,7 +1721,7 @@ rec.start(stream);</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line549">line 549</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line550">line 550</a>
     </li></ul></dd>
     
 
@@ -1809,10 +1774,7 @@ rec.start(stream);</code></pre>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var rec = new qbRecorder();
-rec.start(stream);
-// ...
-rec.download(false); // Set false, name will be generated based on Date.now()</code></pre>
+    <pre class="prettyprint"><code>var rec = new qbRecorder();rec.start(stream);// ...rec.download(false); // Set false, name will be generated based on Date.now()</code></pre>
 
 
 
@@ -1973,7 +1935,7 @@ rec.download(false); // Set false, name will be generated based on Date.now()</c
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Mar 07 2017 14:24:48 GMT+0200 (Финляндия (зима)) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Mar 22 2017 16:57:02 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

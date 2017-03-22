@@ -27,13 +27,14 @@ var ERRORS = require('./errors');
  *     onstop: function onStop(Blob) {
  *         videoElement.src = URL.createObjectURL(blob);
  *     },
- *     mimeType: 'video/mp4' // Supported 'audio/mp3' in QBMediaRecorder version 1.0.0.
+ *     mimeType: 'video/mp4'
  * };
  *
  * // uses as global variable, QBMediaRecorder is built as a UMD module.
  * var recorder = new QBMediaRecorder(opts);
  *
- * @see For record 'audio/mp3' need to connect encoderMP3 (just connect {@link https://www.npmjs.com/package/lamejs|'lame.all.js'} or {@link https://www.npmjs.com/package/lamejs|'lame.min.js'} file to global environment) before init QBMediaRecorder.
+ * @see For record 'audio/mp3' need to connect encoderMP3.
+ * Just add {@link https://www.npmjs.com/package/lamejs|'lame.min.js'} before init QBMediaRecorder.
  */
 function QBMediaRecorder(opts) {
     var prefferedMimeType = opts && opts.mimeType ? opts.mimeType : false;

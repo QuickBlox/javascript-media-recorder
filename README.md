@@ -1,9 +1,22 @@
+<p align="center">
+![Logo of QBMediaRecorderJS](https://raw.githubusercontent.com/QuickBlox/javascript-media-recorder/master/logo.png)
+</p>
+
 # QBMediaRecorderJS
-![Logo of QBMediaRecorderJS](/logo.png)
 
-The QBMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
+>> The QBMediaRecorder.js is a JavaScript library providing stream object (representing a flux of audio- or video-related data) recording and extending the [MediaStream Recording API](https://w3c.github.io/mediacapture-record/MediaRecorder.html).
 
-Extendings methods:
+[![npm](https://img.shields.io/npm/v/media-recorder-js.svg)](https://www.npmjs.com/package/media-recorder-js)
+[![npm](https://img.shields.io/github/stars/QuickBlox/javascript-media-recorder.svg)](https://www.npmjs.com/package/media-recorder-js)
+
+QBMediaRecorder.js support all native mimetypes and 'audio/wav' and 'audio/mp3'.
+For support **wav** and **mp3** add lamejs.
+```html
+<script src='https://cdn.rawgit.com/zhuker/lamejs/c318d57d/lame.min.js'></script>
+<script src='https://unpkg.com/media-recorder-js/mediaRecorder.js'></script>
+``` 
+
+Extendings methods of MediaRecorder:
  - [isAvailable](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#.isAvailable);
  - [getSupportedMimeTypes](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#.getSupportedMimeTypes);
  - [change](https://quickblox.github.io/javascript-media-recorder/docs/QBMediaRecorder.html#change);
