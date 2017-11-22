@@ -9,10 +9,10 @@ module.exports = {
         'audio/mp3'
     ],
     'video': [
-        'video/webm;codecs=h264',
         'video/webm;codecs=vp9',
         'video/webm;codecs=vp8',
-        'video/webm;codecs=daala',
+        'video/webm;codecs=h264',
+        'video/webm;codecs=opus',
         'video/webm',
         'video/mp4',
         'video/mpeg'

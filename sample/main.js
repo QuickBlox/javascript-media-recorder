@@ -152,9 +152,15 @@ var inputCard = {
     },
     attachStreamToSource: function() {
         this.ui.video.pause();
-        this.ui.video.src='';
 
-        this.ui.video.src = URL.createObjectURL(this.stream);
+        try {
+          this.ui.video.srcObject = null;
+          this.ui.video.srcObject = this.stream;
+        } catch (error) {
+          this.ui.video.src = '';
+          this.ui.video.src = URL.createObjectURL(this.stream);
+        }
+
         this.ui.video.play();
     },
     getUserMedia: function(attrs) {
@@ -285,7 +291,8 @@ inputCard.init()
                 onstop: function onStoppedRecording(blob) {
                     resultCard.blob = blob;
                     resultCard.attachVideo(blob);
-                }
+                },
+	              mimeType: 'audio/mp3'
             };
 
         var rec = new QBMediaRecorder(opts);

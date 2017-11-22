@@ -57,6 +57,7 @@ function QBMediaRecorder(opts) {
     this._keepRecording = false;
 
     if (this._customMimeType) {
+        this.mp3Warker = new Worker('worker.js');
         this._setCustomRecorderTools();
     }
 }
@@ -83,8 +84,12 @@ QBMediaRecorder.prototype._setCustomRecorderTools = function () {
     self._buffer = [];
     self._recordingLength = 0;
 
-    if (QBMediaRecorder._isMp3Encoder() && this._customMimeType === 'audio/mp3') {
-        self._mp3encoder = new lamejs.Mp3Encoder(1, 48000, 256);
+    if (this._customMimeType === 'audio/mp3') {
+        self.mp3Warker.postMessage({ cmd: 'encode' });
+        self.mp3Warker.onmessage = function(e) {
+		      self._mp3encoder = e.data.mp3encoder;
+		      console.log(self._mp3encoder);
+        };
     }
 };
 
@@ -139,10 +144,6 @@ QBMediaRecorder._isAudioContext = function () {
     return !!(window && (window.AudioContext || window.webkitAudioContext));
 };
 
-QBMediaRecorder._isMp3Encoder = function () {
-    return !!(window && (window.AudioContext || window.webkitAudioContext) && window.lamejs);
-};
-
 /**
  * Returns a Boolean which is true if the MIME type specified is one the user agent can record.
  * @param  {String} mimeType - The mimeType to check.
@@ -172,7 +173,7 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
             break;
 
         case 'audio/mp3':
-            if (QBMediaRecorder._isAudioContext() && QBMediaRecorder._isMp3Encoder()) {
+            if (QBMediaRecorder._isAudioContext() && self.mp3Warker) {
                 result = true;
             }
             break;
@@ -188,7 +189,7 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
 /**
  * Return all supported mime types and container format.
  * @param  {String} [type=video] Type of media.
- * @return {Array}                   Array of supported mimetypes.Recommended mimetype has 0 index.
+ * @return {Array}               Array of supported mimetypes. Recommended mimetype has 0 index.
  *
  * @example
  * var type = QBMediaRecorder.getSupportedMimeTypes('audio');
@@ -197,7 +198,7 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
 QBMediaRecorder.getSupportedMimeTypes = function(type) {
     var typeMedia = type || 'video';
 
-    if(!QBMediaRecorder.isAvailable()) {
+    if (!QBMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
     }
 
@@ -236,7 +237,7 @@ QBMediaRecorder.prototype.getState = function() {
  *     onstart: function onStart() {
  *         var time = 0,
  *             step = 1000;
- *         
+ *
  *         setTimeout(function () {
  *             time += step;
  *             console.info(`You are recording ${time} sec.`);
