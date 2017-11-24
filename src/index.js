@@ -61,8 +61,6 @@ function QBMediaRecorder(opts) {
         } else {
             throw new Error(ERRORS.unsupportCustomMimeType);
         }
-    } else {
-        throw new Error(ERRORS.unsupportCustomAudioRecorder);
     }
 
     if(!QBMediaRecorder.isAvailable() && !this._customMimeType) {
@@ -164,7 +162,7 @@ QBMediaRecorder.isAvailable = function() {
 };
 
 QBMediaRecorder._isAudioContext = function () {
-    return !!(window && (window.AudioContext || window.webkitAudioContext) && QBMediaRecorder.isWorkerActive);
+    return !!(window && (window.AudioContext || window.webkitAudioContext));
 };
 
 /**
@@ -707,6 +705,8 @@ QBMediaRecorder.prototype._stopAudioProcess = function() {
 QBMediaRecorder.prototype._postMessageToWorker = function(data) {
     if (QBMediaRecorder.isWorkerActive) {
         this.worker.postMessage(data);
+    } else {
+        throw new Error(ERRORS.unsupportCustomAudioRecorder);
     }
 };
 

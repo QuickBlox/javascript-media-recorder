@@ -4,6 +4,8 @@
 
 'use strict';
 
+var rec;
+
 var notify = {
     ui: document.querySelector('.j-notify'),
     hide: function() {
@@ -66,6 +68,7 @@ var resultCard = {
 };
 
 var inputCard = {
+    audioRecorderWorkerPath: '../qbAudioRecorderWorker.js',
     stream: null,
     devices: {
         audio: [],
@@ -81,15 +84,16 @@ var inputCard = {
         resume: document.querySelector('.j-resume'),
 
         selectAudioSource: document.getElementById('j-audioSource'),
-        selectVideoSource: document.getElementById('j-videoSource')
+        selectVideoSource: document.getElementById('j-videoSource'),
+        selectMimeTypeFormats: document.getElementById('j-mimeTypes')
     },
     _createOptions: function(type) {
         var docfrag = document.createDocumentFragment();
 
         /* create a default option */
         var optDef = document.createElement('option');
-        optDef.textContent = `Choose an input ${type}-device`;
-        optDef.value = 'default';
+            optDef.textContent = `Choose an input ${type}-device`;
+            optDef.value = 'default';
 
         docfrag.appendChild(optDef);
 
@@ -112,11 +116,31 @@ var inputCard = {
 
         return docfrag;
     },
+    _createMimeTypesOptions: function(mimeTypes) {
+        var docfrag = document.createDocumentFragment();
+
+        var optDef = document.createElement('option');
+        optDef.textContent = `Choose a mime-type`;
+        optDef.value = mimeTypes[0];
+
+        docfrag.appendChild(optDef);
+
+        mimeTypes.forEach(function(mimeType) {
+            var option = document.createElement('option');
+
+            option.value = mimeType;
+            option.textContent = mimeType;
+
+            docfrag.appendChild(option);
+        });
+
+        return docfrag;
+    },
     _processDevices: function(devices) {
         var self = this;
 
         var docfragAudio = document.createDocumentFragment(),
-            docfragVideo = document.createDocumentFragment()
+            docfragVideo = document.createDocumentFragment();
 
         devices.forEach(function(device) {
             if(device.kind.indexOf('input') !== -1) {
@@ -140,6 +164,15 @@ var inputCard = {
         if(self.devices.video.length > 0) {
             self.ui.selectVideoSource.appendChild( self._createOptions('video') );
             self.ui.selectVideoSource.classList.remove('invisible');
+        }
+
+        if(QBMediaRecorder.getSupportedMimeTypes("audio").length) {
+            var audioMimeTypes = QBMediaRecorder.getSupportedMimeTypes("audio"),
+                videoMimeTypes = QBMediaRecorder.getSupportedMimeTypes("video"),
+                allMimeTypes = videoMimeTypes.concat(audioMimeTypes);
+
+            self.ui.selectMimeTypeFormats.appendChild( self._createMimeTypesOptions(allMimeTypes) );
+            self.ui.selectMimeTypeFormats.classList.remove('invisible');
         }
     },
     getDevices: function() {
@@ -262,8 +295,20 @@ var inputCard = {
             });
         }
 
+        function handleRecordMimeType() {
+            var sMimeType = self.ui.selectMimeTypeFormats,
+                selectedMimeType = sMimeType.options[sMimeType.selectedIndex].value;
+
+            console.log(selectedMimeType);
+            initRecorder({
+                mimeType: selectedMimeType,
+                workerPath: self.audioRecorderWorkerPath
+            });
+        }
+
         self.ui.selectAudioSource.addEventListener('change', handleSources);
         self.ui.selectVideoSource.addEventListener('change', handleSources);
+        self.ui.selectMimeTypeFormats.addEventListener('change', handleRecordMimeType);
     },
     init: function() {
         var self = this;
@@ -287,47 +332,55 @@ var inputCard = {
 /* Start !FUN */
 inputCard.init()
     .then(function() {
-        var opts = {
-                onstop: function onStoppedRecording(blob) {
-                    resultCard.blob = blob;
-                    resultCard.attachVideo(blob);
-                }
-            };
-
-        var rec = new QBMediaRecorder(opts);
-
-        resultCard.setupListeners();
-
-        inputCard.ui.wrap.addEventListener('started', function() {
-            rec.start(inputCard.stream);
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('paused', function() {
-            rec.pause();
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('resumed', function() {
-            rec.resume();
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('changed', function() {
-            if(rec.getState() === 'recording') {
-                rec.change(inputCard.stream);
-            }
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('stopped', function() {
-            rec.stop();
-            resultCard.toggleBtn(false);
-        }, false);
-
-        resultCard.ui.wrap.addEventListener('download', function() {
-            rec.download(null, resultCard.blob);
-        }, false);
+        initRecorder();
     })
     .catch(function(error) {
         notify.show(`Error: ${error.name}`);
     });
+
+function initRecorder(params) {
+    rec = null;
+
+    var opts = {
+        onstop: function onStoppedRecording(blob) {
+            resultCard.blob = blob;
+            resultCard.attachVideo(blob);
+        },
+        mimeType: params && params.mimeType || null,
+        workerPath: params && params.workerPath || null
+    };
+
+    rec = new QBMediaRecorder(opts);
+
+    resultCard.setupListeners();
+
+    inputCard.ui.wrap.addEventListener('started', function() {
+        rec.start(inputCard.stream);
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('paused', function() {
+        rec.pause();
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('resumed', function() {
+        rec.resume();
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('changed', function() {
+        if(rec.getState() === 'recording') {
+            rec.change(inputCard.stream);
+        }
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('stopped', function() {
+        rec.stop();
+        resultCard.toggleBtn(false);
+    }, false);
+
+    resultCard.ui.wrap.addEventListener('download', function() {
+        rec.download(null, resultCard.blob);
+    }, false);
+}
 
 
 
