@@ -2,6 +2,9 @@
 
 module.exports = {
     'unsupport': 'QBMediaRecorder is not supported this environment.',
+    'unsupportCustomMimeType': 'Incorrect audio mimeType.',
+    'unsupportCustomAudioRecorder': 'qbAudioRecorderWorker.js wasn\'t found.',
+    'unsupportAudioContext': 'AudioContext API is not supported this environment.',
     'unsupportMediaRecorderWithOptions': 'Got a warning when creating a MediaRecorder, trying to create MediaRecorder without options.',
     'requreArgument': '1 argument required, but only 0 present.',
     'callbackError': 'Founded an error in callback:',

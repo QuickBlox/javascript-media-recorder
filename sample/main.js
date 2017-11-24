@@ -81,7 +81,7 @@ var inputCard = {
         resume: document.querySelector('.j-resume'),
 
         selectAudioSource: document.getElementById('j-audioSource'),
-        selectVideoSource: document.getElementById('j-videoSource'),
+        selectVideoSource: document.getElementById('j-videoSource')
     },
     _createOptions: function(type) {
         var docfrag = document.createDocumentFragment();
@@ -291,8 +291,7 @@ inputCard.init()
                 onstop: function onStoppedRecording(blob) {
                     resultCard.blob = blob;
                     resultCard.attachVideo(blob);
-                },
-	              mimeType: 'audio/mp3'
+                }
             };
 
         var rec = new QBMediaRecorder(opts);

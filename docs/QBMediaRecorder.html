@@ -65,7 +65,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line8">line 8</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line5">line 5</a>
     </li></ul></dd>
     
 
@@ -96,13 +96,6 @@
     
 
     
-    <dt class="tag-see">See:</dt>
-    <dd class="tag-see">
-        <ul>
-            <li>For record 'audio/mp3' need to connect encoderMP3.Just add <a href="https://www.npmjs.com/package/lamejs">'lame.min.js'</a> before init QBMediaRecorder.</li>
-        </ul>
-    </dd>
-    
 
     
 </dl>
@@ -119,9 +112,11 @@
 
 
 
-    <h5>Example</h5>
+    <h5>Examples</h5>
     
     <pre class="prettyprint"><code>var opts = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    mimeType: 'video/mp4'};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
+
+    <pre class="prettyprint"><code>// For record 'audio/mp3' or 'audio/wav' need to add <a href="https://github.com/QuickBlox/javascript-media-recorder/blob/master/qbAudioRecorderWorker.js">'qbAudioRecorderWorker.js'</a> file to your project.var opts = {    // use named function    onstart: function onStart() {        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    // 'audio/wav' or 'audio/mp3'    mimeType: 'audio/mp3',    // set relative path (from folder node_modules for example)    workerPath: '../node_modules/javascript-media-recorder/qbAudioRecorderWorker.js'};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
 
 
 
@@ -230,6 +225,33 @@
             
 
             <td class="description last"><p>Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>workerPath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Relative path from index.html.</p></td>
         </tr>
 
     
@@ -540,7 +562,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line134">line 134</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line162">line 162</a>
     </li></ul></dd>
     
 
@@ -651,7 +673,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line156">line 156</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line180">line 180</a>
     </li></ul></dd>
     
 
@@ -813,7 +835,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line197">line 197</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line221">line 221</a>
     </li></ul></dd>
     
 
@@ -993,7 +1015,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line222">line 222</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line246">line 246</a>
     </li></ul></dd>
     
 
@@ -1104,7 +1126,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line251">line 251</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line275">line 275</a>
     </li></ul></dd>
     
 
@@ -1157,7 +1179,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;                setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
+    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;        setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
 
 
 
@@ -1260,7 +1282,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line469">line 469</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line483">line 483</a>
     </li></ul></dd>
     
 
@@ -1366,7 +1388,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line484">line 484</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line498">line 498</a>
     </li></ul></dd>
     
 
@@ -1468,7 +1490,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line498">line 498</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line512">line 512</a>
     </li></ul></dd>
     
 
@@ -1570,7 +1592,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line513">line 513</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line527">line 527</a>
     </li></ul></dd>
     
 
@@ -1721,7 +1743,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line550">line 550</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line564">line 564</a>
     </li></ul></dd>
     
 
@@ -1935,7 +1957,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Nov 22 2017 11:55:43 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 24 2017 16:50:47 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
