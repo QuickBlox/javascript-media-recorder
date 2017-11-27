@@ -51,23 +51,12 @@ var ERRORS = require('./errors');
  * var recorder = new QBMediaRecorder(opts);
  */
 function QBMediaRecorder(opts) {
-    var prefferedMimeType = opts && opts.mimeType ? opts.mimeType : false;
-    this._customMimeType = (prefferedMimeType === 'audio/wav') ? 'audio/wav' :
-                           (prefferedMimeType === 'audio/mp3') ? 'audio/mp3' : false;
+    this.toggleMimeType(opts);
 
     if (opts.workerPath) {
-        if (this._customMimeType) {
-            this._setCustomRecorderTools(opts.workerPath);
-        } else {
-            throw new Error(ERRORS.unsupportCustomMimeType);
-        }
+        this._setCustomRecorderTools(opts.workerPath);
     }
 
-    if(!QBMediaRecorder.isAvailable() && !this._customMimeType) {
-        throw new Error(ERRORS.unsupport);
-    }
-
-    this.mimeType = this._getMimeType(prefferedMimeType);
     this.timeslice = opts && opts.timeslice && isNaN(+opts.timeslice) ? opts.timeslice : 1000;
     this.callbacks = opts ? this._getCallbacks(opts) : {};
     this.recordedBlobs = [];
@@ -79,39 +68,74 @@ function QBMediaRecorder(opts) {
     this._keepRecording = false;
 }
 
-QBMediaRecorder.prototype._setCustomRecorderTools = function (workerPath) {
+/**
+ * @param  {String} mimeType - The mimeType to set as option.
+ * @return {Boolean}         - True if the MediaRecorder implementation is capable of recording Blob objects for the specified MIME type.
+ *
+ * @example
+ * var opts = {
+ *     onstart: function onStart() {
+ *         console.log('Recorder is started');
+ *     },
+ *     onstop: function onStop(Blob) {
+ *         videoElement.src = URL.createObjectURL(blob);
+ *     },
+ *     mimeType: 'video/mp4',
+ *     // set the path to the worker before if 'audio/wav' or 'audio/mp3' mimeTypes will be used.
+ *     workerPath: '../node_modules/javascript-media-recorder/qbAudioRecorderWorker.js'
+ * };
+ *
+ * var recorder = new QBMediaRecorder(opts);
+ *
+ * recorder.toggleMimeType('audio/mp3');
+ */
+QBMediaRecorder.prototype.toggleMimeType = function(mimeType) {
+    var prefferedMimeType = mimeType ? mimeType : false;
+
+    this._customMimeType = (prefferedMimeType === 'audio/wav') ? 'audio/wav' :
+        (prefferedMimeType === 'audio/mp3') ? 'audio/mp3' : false;
+
+    if (!QBMediaRecorder.isAvailable() && !this._customMimeType) {
+        throw new Error(ERRORS.unsupport);
+    }
+
+    this.mimeType = this._customMimeType ? this._customMimeType : this._getMimeType(prefferedMimeType);
+};
+
+QBMediaRecorder.prototype._setCustomRecorderTools = function(path) {
     var self = this;
 
     // init worker for custom audio types (audio/wav, audio/mp3)
-    self.worker = new Worker(workerPath);
+    try {
+        self._worker = new Worker(path);
 
-    QBMediaRecorder.isWorkerActive = !!self.worker;
+        self._postMessageToWorker({
+            cmd: 'init',
+            mimeType: self.mimeType
+        });
 
-    self._postMessageToWorker({
-        cmd: 'init',
-        mimeType: self.mimeType
-    });
+        self._worker.onmessage = function(event) {
+            self._createBlob(event.data);
+            self._closeAudioProcess();
+        };
 
-    self.worker.onmessage = function(event) {
-        self._createBlob(event.data);
-        self._closeAudioProcess();
-    };
+        if (!QBMediaRecorder._isAudioContext()) {
+            throw new Error(ERRORS.unsupportAudioContext);
+        }
 
-    if (!QBMediaRecorder._isAudioContext()) {
-        throw new Error(ERRORS.unsupportAudioContext);
+        /*
+        * context = new AudioContext();
+        * context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOutputChannels);
+        *
+        * link: https://developer.mozilla.org/ru/docs/Web/API/AudioContext/createScriptProcessor
+        */
+        self.BUFFER_SIZE = 2048; // the buffer size in units of sample-frames.
+        self.INPUT_CHANNELS = 1; // the number of channels for this node's input, defaults to 2
+        self.OUTPUT_CHANNELS = 1; // the number of channels for this node's output, defaults to 2
+        self._audioContext = null;
+    } catch(e) {
+        throw new Error(ERRORS.unsupportCustomAudioRecorder, e);
     }
-
-    self.mimeType = self._customMimeType;
-    /*
-    * context = new AudioContext();
-    * context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOutputChannels);
-    *
-    * link: https://developer.mozilla.org/ru/docs/Web/API/AudioContext/createScriptProcessor
-    */
-    self.BUFFER_SIZE = 2048; // the buffer size in units of sample-frames.
-    self.INPUT_CHANNELS = 1; // the number of channels for this node's input, defaults to 2
-    self.OUTPUT_CHANNELS = 1; // the number of channels for this node's output, defaults to 2
-    self._audioContext = null;
 };
 
 QBMediaRecorder.prototype._getMimeType = function (preffered) {
@@ -605,7 +629,7 @@ QBMediaRecorder.prototype._createBlob = function(chunks) {
     }
 
     self._keepRecording = false;
-}
+};
 
 /**
  * Create a Blob from recorded chunks.
@@ -703,10 +727,8 @@ QBMediaRecorder.prototype._stopAudioProcess = function() {
 };
 
 QBMediaRecorder.prototype._postMessageToWorker = function(data) {
-    if (QBMediaRecorder.isWorkerActive) {
-        this.worker.postMessage(data);
-    } else {
-        throw new Error(ERRORS.unsupportCustomAudioRecorder);
+    if (this._worker) {
+        this._worker.postMessage(data);
     }
 };
 

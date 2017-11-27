@@ -119,17 +119,18 @@ var inputCard = {
     _createMimeTypesOptions: function(mimeTypes) {
         var docfrag = document.createDocumentFragment();
 
-        var optDef = document.createElement('option');
-        optDef.textContent = `Choose a mime-type`;
-        optDef.value = mimeTypes[0];
-
-        docfrag.appendChild(optDef);
-
         mimeTypes.forEach(function(mimeType) {
             var option = document.createElement('option');
 
             option.value = mimeType;
             option.textContent = mimeType;
+
+            if (mimeType.includes('video')) {
+                option.classList.add('j-videoMimeType');
+            } else {
+                option.classList.add('j-audioMimeType');
+                option.disabled = true;
+            }
 
             docfrag.appendChild(option);
         });
@@ -166,7 +167,7 @@ var inputCard = {
             self.ui.selectVideoSource.classList.remove('invisible');
         }
 
-        if(QBMediaRecorder.getSupportedMimeTypes("audio").length) {
+        if(QBMediaRecorder.getSupportedMimeTypes().length) {
             var audioMimeTypes = QBMediaRecorder.getSupportedMimeTypes("audio"),
                 videoMimeTypes = QBMediaRecorder.getSupportedMimeTypes("video"),
                 allMimeTypes = videoMimeTypes.concat(audioMimeTypes);
@@ -213,6 +214,7 @@ var inputCard = {
             constraints.audio = true;
         } else if(selectedAudioSource === '0') {
             constraints.audio = false;
+            this._toggleAudioTypesSelect(true);
         } else {
             constraints.audio = {deviceId: selectedAudioSource};
         }
@@ -225,7 +227,24 @@ var inputCard = {
             constraints.video = {deviceId: selectedVideoSource};
         }
 
+        this._toggleAudioTypesSelect(constraints.video);
+        this._toggleVideoTypesSelect(!constraints.video);
+
         return constraints;
+    },
+    _toggleAudioTypesSelect: function(state) {
+        var audioTypes = document.getElementsByClassName('j-audioMimeType');
+
+        for (var i = 0; i < audioTypes.length; i++) {
+            audioTypes[i].disabled = state;
+        }
+    },
+    _toggleVideoTypesSelect: function(state) {
+        var videoTypes = document.getElementsByClassName('j-videoMimeType');
+
+        for (var i = 0; i < videoTypes.length; i++) {
+            videoTypes[i].disabled = state;
+        }
     },
     _stopStreaming: function() {
         this.stream.getTracks().forEach(function(track) {
@@ -248,6 +267,8 @@ var inputCard = {
             self.ui.stop.disabled = false;
             self.ui.pause.disabled = false;
 
+            self.ui.selectMimeTypeFormats.disabled = true;
+
             self.ui.wrap.dispatchEvent(evStart);
         });
 
@@ -257,6 +278,8 @@ var inputCard = {
             self.ui.stop.disabled = true;
             self.ui.pause.disabled = true;
             self.ui.resume.disabled = true;
+
+            self.ui.selectMimeTypeFormats.disabled = false;
 
             self.ui.wrap.dispatchEvent(evStop);
         });
@@ -299,11 +322,7 @@ var inputCard = {
             var sMimeType = self.ui.selectMimeTypeFormats,
                 selectedMimeType = sMimeType.options[sMimeType.selectedIndex].value;
 
-            console.log(selectedMimeType);
-            initRecorder({
-                mimeType: selectedMimeType,
-                workerPath: self.audioRecorderWorkerPath
-            });
+            rec.toggleMimeType(selectedMimeType);
         }
 
         self.ui.selectAudioSource.addEventListener('change', handleSources);
@@ -338,16 +357,13 @@ inputCard.init()
         notify.show(`Error: ${error.name}`);
     });
 
-function initRecorder(params) {
-    rec = null;
-
+function initRecorder() {
     var opts = {
         onstop: function onStoppedRecording(blob) {
             resultCard.blob = blob;
             resultCard.attachVideo(blob);
         },
-        mimeType: params && params.mimeType || null,
-        workerPath: params && params.workerPath || null
+        workerPath: inputCard.audioRecorderWorkerPath
     };
 
     rec = new QBMediaRecorder(opts);
@@ -367,7 +383,7 @@ function initRecorder(params) {
     }, false);
 
     inputCard.ui.wrap.addEventListener('changed', function() {
-        if(rec.getState() === 'recording') {
+        if (rec.getState() === 'recording') {
             rec.change(inputCard.stream);
         }
     }, false);
