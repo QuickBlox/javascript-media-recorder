@@ -9,6 +9,11 @@ var connect = require('gulp-connect');
 var plumber = require('gulp-plumber');
 var notify = require('gulp-notify');
 
+var uglifyOpts = {
+    mangle: true,
+    compress: true
+};
+
 gulp.task('build', function() {
     return browserify('./src/index.js', {
             'debug': true,
@@ -20,7 +25,7 @@ gulp.task('build', function() {
             return notify().write(error);
         })
         .pipe(plumber())
-        .pipe(source('mediaRecorder.js'))
+        .pipe(source('qbMediaRecorder.js'))
         .pipe(gulp.dest('./'))
         .pipe(notify('Build task is finished'));
 });
@@ -33,10 +38,17 @@ gulp.task('connect', function() {
 });
 
 gulp.task('compress', function() {
-    return gulp.src('mediaRecorder.js')
-        .pipe(uglify())
+    return gulp.src('qbMediaRecorder.js')
+        .pipe(uglify(uglifyOpts))
         .pipe(gulp.dest('./'))
-        .pipe(notify('Compress task is finished'));;
+        .pipe(notify('Compress task is finished'));
+});
+
+gulp.task('compress:worker', function() {
+    return gulp.src('./src/qbAudioRecorderWorker.js')
+        .pipe(uglify(uglifyOpts))
+        .pipe(gulp.dest('./'))
+        .pipe(notify('Compress task is finished'));
 });
 
 gulp.task('watch', ['build'], function() {

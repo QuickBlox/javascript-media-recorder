@@ -4,6 +4,8 @@
 
 'use strict';
 
+var rec;
+
 var notify = {
     ui: document.querySelector('.j-notify'),
     hide: function() {
@@ -66,6 +68,7 @@ var resultCard = {
 };
 
 var inputCard = {
+    audioRecorderWorkerPath: '../qbAudioRecorderWorker.js',
     stream: null,
     devices: {
         audio: [],
@@ -82,14 +85,15 @@ var inputCard = {
 
         selectAudioSource: document.getElementById('j-audioSource'),
         selectVideoSource: document.getElementById('j-videoSource'),
+        selectMimeTypeFormats: document.getElementById('j-mimeTypes')
     },
     _createOptions: function(type) {
         var docfrag = document.createDocumentFragment();
 
         /* create a default option */
         var optDef = document.createElement('option');
-        optDef.textContent = `Choose an input ${type}-device`;
-        optDef.value = 'default';
+            optDef.textContent = `Choose an input ${type}-device`;
+            optDef.value = 'default';
 
         docfrag.appendChild(optDef);
 
@@ -112,11 +116,32 @@ var inputCard = {
 
         return docfrag;
     },
+    _createMimeTypesOptions: function(mimeTypes) {
+        var docfrag = document.createDocumentFragment();
+
+        mimeTypes.forEach(function(mimeType) {
+            var option = document.createElement('option');
+
+            option.value = mimeType;
+            option.textContent = mimeType;
+
+            if (mimeType.includes('video')) {
+                option.classList.add('j-videoMimeType');
+            } else {
+                option.classList.add('j-audioMimeType');
+                option.disabled = true;
+            }
+
+            docfrag.appendChild(option);
+        });
+
+        return docfrag;
+    },
     _processDevices: function(devices) {
         var self = this;
 
         var docfragAudio = document.createDocumentFragment(),
-            docfragVideo = document.createDocumentFragment()
+            docfragVideo = document.createDocumentFragment();
 
         devices.forEach(function(device) {
             if(device.kind.indexOf('input') !== -1) {
@@ -141,6 +166,15 @@ var inputCard = {
             self.ui.selectVideoSource.appendChild( self._createOptions('video') );
             self.ui.selectVideoSource.classList.remove('invisible');
         }
+
+        if(QBMediaRecorder.getSupportedMimeTypes().length) {
+            var audioMimeTypes = QBMediaRecorder.getSupportedMimeTypes("audio"),
+                videoMimeTypes = QBMediaRecorder.getSupportedMimeTypes("video"),
+                allMimeTypes = videoMimeTypes.concat(audioMimeTypes);
+
+            self.ui.selectMimeTypeFormats.appendChild( self._createMimeTypesOptions(allMimeTypes) );
+            self.ui.selectMimeTypeFormats.classList.remove('invisible');
+        }
     },
     getDevices: function() {
         var self = this;
@@ -152,9 +186,15 @@ var inputCard = {
     },
     attachStreamToSource: function() {
         this.ui.video.pause();
-        this.ui.video.src='';
 
-        this.ui.video.src = URL.createObjectURL(this.stream);
+        try {
+          this.ui.video.srcObject = null;
+          this.ui.video.srcObject = this.stream;
+        } catch (error) {
+          this.ui.video.src = '';
+          this.ui.video.src = URL.createObjectURL(this.stream);
+        }
+
         this.ui.video.play();
     },
     getUserMedia: function(attrs) {
@@ -174,6 +214,7 @@ var inputCard = {
             constraints.audio = true;
         } else if(selectedAudioSource === '0') {
             constraints.audio = false;
+            this._toggleAudioTypesSelect(true);
         } else {
             constraints.audio = {deviceId: selectedAudioSource};
         }
@@ -186,7 +227,24 @@ var inputCard = {
             constraints.video = {deviceId: selectedVideoSource};
         }
 
+        this._toggleAudioTypesSelect(constraints.video);
+        this._toggleVideoTypesSelect(!constraints.video);
+
         return constraints;
+    },
+    _toggleAudioTypesSelect: function(state) {
+        var audioTypes = document.getElementsByClassName('j-audioMimeType');
+
+        for (var i = 0; i < audioTypes.length; i++) {
+            audioTypes[i].disabled = state;
+        }
+    },
+    _toggleVideoTypesSelect: function(state) {
+        var videoTypes = document.getElementsByClassName('j-videoMimeType');
+
+        for (var i = 0; i < videoTypes.length; i++) {
+            videoTypes[i].disabled = state;
+        }
     },
     _stopStreaming: function() {
         this.stream.getTracks().forEach(function(track) {
@@ -209,6 +267,8 @@ var inputCard = {
             self.ui.stop.disabled = false;
             self.ui.pause.disabled = false;
 
+            self.ui.selectMimeTypeFormats.disabled = true;
+
             self.ui.wrap.dispatchEvent(evStart);
         });
 
@@ -218,6 +278,8 @@ var inputCard = {
             self.ui.stop.disabled = true;
             self.ui.pause.disabled = true;
             self.ui.resume.disabled = true;
+
+            self.ui.selectMimeTypeFormats.disabled = false;
 
             self.ui.wrap.dispatchEvent(evStop);
         });
@@ -256,8 +318,16 @@ var inputCard = {
             });
         }
 
+        function handleRecordMimeType() {
+            var sMimeType = self.ui.selectMimeTypeFormats,
+                selectedMimeType = sMimeType.options[sMimeType.selectedIndex].value;
+
+            rec.toggleMimeType(selectedMimeType);
+        }
+
         self.ui.selectAudioSource.addEventListener('change', handleSources);
         self.ui.selectVideoSource.addEventListener('change', handleSources);
+        self.ui.selectMimeTypeFormats.addEventListener('change', handleRecordMimeType);
     },
     init: function() {
         var self = this;
@@ -281,47 +351,52 @@ var inputCard = {
 /* Start !FUN */
 inputCard.init()
     .then(function() {
-        var opts = {
-                onstop: function onStoppedRecording(blob) {
-                    resultCard.blob = blob;
-                    resultCard.attachVideo(blob);
-                }
-            };
-
-        var rec = new QBMediaRecorder(opts);
-
-        resultCard.setupListeners();
-
-        inputCard.ui.wrap.addEventListener('started', function() {
-            rec.start(inputCard.stream);
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('paused', function() {
-            rec.pause();
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('resumed', function() {
-            rec.resume();
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('changed', function() {
-            if(rec.getState() === 'recording') {
-                rec.change(inputCard.stream);
-            }
-        }, false);
-
-        inputCard.ui.wrap.addEventListener('stopped', function() {
-            rec.stop();
-            resultCard.toggleBtn(false);
-        }, false);
-
-        resultCard.ui.wrap.addEventListener('download', function() {
-            rec.download(null, resultCard.blob);
-        }, false);
+        initRecorder();
     })
     .catch(function(error) {
         notify.show(`Error: ${error.name}`);
     });
+
+function initRecorder() {
+    var opts = {
+        onstop: function onStoppedRecording(blob) {
+            resultCard.blob = blob;
+            resultCard.attachVideo(blob);
+        },
+        workerPath: inputCard.audioRecorderWorkerPath
+    };
+
+    rec = new QBMediaRecorder(opts);
+
+    resultCard.setupListeners();
+
+    inputCard.ui.wrap.addEventListener('started', function() {
+        rec.start(inputCard.stream);
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('paused', function() {
+        rec.pause();
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('resumed', function() {
+        rec.resume();
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('changed', function() {
+        if (rec.getState() === 'recording') {
+            rec.change(inputCard.stream);
+        }
+    }, false);
+
+    inputCard.ui.wrap.addEventListener('stopped', function() {
+        rec.stop();
+        resultCard.toggleBtn(false);
+    }, false);
+
+    resultCard.ui.wrap.addEventListener('download', function() {
+        rec.download(null, resultCard.blob);
+    }, false);
+}
 
 
 

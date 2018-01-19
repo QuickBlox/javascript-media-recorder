@@ -22,7 +22,7 @@
 <label for="nav-trigger" class="overlay"></label>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="QBMediaRecorder.html">QBMediaRecorder</a><ul class='methods'><li data-type='method'><a href="QBMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="QBMediaRecorder.html#.isTypeSupported">isTypeSupported</a></li><li data-type='method'><a href="QBMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="QBMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="QBMediaRecorder.html#start">start</a></li><li data-type='method'><a href="QBMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="QBMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="QBMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="QBMediaRecorder.html#change">change</a></li><li data-type='method'><a href="QBMediaRecorder.html#download">download</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="QBMediaRecorder.html">QBMediaRecorder</a><ul class='methods'><li data-type='method'><a href="QBMediaRecorder.html#toggleMimeType">toggleMimeType</a></li><li data-type='method'><a href="QBMediaRecorder.html#.isAvailable">isAvailable</a></li><li data-type='method'><a href="QBMediaRecorder.html#.isTypeSupported">isTypeSupported</a></li><li data-type='method'><a href="QBMediaRecorder.html#.getSupportedMimeTypes">getSupportedMimeTypes</a></li><li data-type='method'><a href="QBMediaRecorder.html#getState">getState</a></li><li data-type='method'><a href="QBMediaRecorder.html#start">start</a></li><li data-type='method'><a href="QBMediaRecorder.html#stop">stop</a></li><li data-type='method'><a href="QBMediaRecorder.html#pause">pause</a></li><li data-type='method'><a href="QBMediaRecorder.html#resume">resume</a></li><li data-type='method'><a href="QBMediaRecorder.html#change">change</a></li><li data-type='method'><a href="QBMediaRecorder.html#download">download</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -65,7 +65,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line8">line 8</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line5">line 5</a>
     </li></ul></dd>
     
 
@@ -96,13 +96,6 @@
     
 
     
-    <dt class="tag-see">See:</dt>
-    <dd class="tag-see">
-        <ul>
-            <li>For record 'audio/mp3' need to connect encoderMP3.Just add <a href="https://www.npmjs.com/package/lamejs">'lame.min.js'</a> before init QBMediaRecorder.</li>
-        </ul>
-    </dd>
-    
 
     
 </dl>
@@ -119,9 +112,11 @@
 
 
 
-    <h5>Example</h5>
+    <h5>Examples</h5>
     
     <pre class="prettyprint"><code>var opts = {    onstart: function onStart() { // Use named function.        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    mimeType: 'video/mp4'};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
+
+    <pre class="prettyprint"><code>// For record 'audio/mp3' or 'audio/wav' need to add <a href="https://github.com/QuickBlox/javascript-media-recorder/blob/master/qbAudioRecorderWorker.js">'qbAudioRecorderWorker.js'</a> file to your project.var opts = {    // use named function    onstart: function onStart() {        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    // 'audio/wav' or 'audio/mp3'    mimeType: 'audio/mp3',    // set relative path (from folder node_modules for example)    workerPath: '../node_modules/javascript-media-recorder/qbAudioRecorderWorker.js'};// uses as global variable, QBMediaRecorder is built as a UMD module.var recorder = new QBMediaRecorder(opts);</code></pre>
 
 
 
@@ -230,6 +225,33 @@
             
 
             <td class="description last"><p>Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>workerPath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Relative path from index.html.</p></td>
         </tr>
 
     
@@ -528,6 +550,164 @@
 
     
 
+    <h4 class="name" id="toggleMimeType"><span class="type-signature"></span>toggleMimeType<span class="signature">(mimeType)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line92">line 92</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var opts = {    onstart: function onStart() {        console.log('Recorder is started');    },    onstop: function onStop(Blob) {        videoElement.src = URL.createObjectURL(blob);    },    mimeType: 'video/mp4',    // set the path to the worker before if 'audio/wav' or 'audio/mp3' mimeTypes will be used.    workerPath: '../node_modules/javascript-media-recorder/qbAudioRecorderWorker.js'};var recorder = new QBMediaRecorder(opts);recorder.toggleMimeType('audio/mp3');</code></pre>
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mimeType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The mimeType to set as option.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>True if the MediaRecorder implementation is capable of recording Blob objects for the specified MIME type.</li>
+</ul>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".isAvailable"><span class="type-signature">(static) </span>isAvailable<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
@@ -540,7 +720,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line134">line 134</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line184">line 184</a>
     </li></ul></dd>
     
 
@@ -651,7 +831,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line156">line 156</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -813,7 +993,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line197">line 197</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line243">line 243</a>
     </li></ul></dd>
     
 
@@ -956,7 +1136,7 @@
 
         
 <div class="param-desc">
-    <p>Array of supported mimetypes.Recommended mimetype has 0 index.</p>
+    <p>Array of supported mimetypes. Recommended mimetype has 0 index.</p>
 </div>
 
 
@@ -993,7 +1173,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line222">line 222</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line268">line 268</a>
     </li></ul></dd>
     
 
@@ -1104,7 +1284,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line251">line 251</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line297">line 297</a>
     </li></ul></dd>
     
 
@@ -1157,7 +1337,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;                setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
+    <pre class="prettyprint"><code>var options = {    onstart: function onStart() {        var time = 0,            step = 1000;        setTimeout(function () {            time += step;            console.info(`You are recording ${time} sec.`);        }, step);    }}var rec = new qbRecorder(options);// ...rec.start(stream);</code></pre>
 
 
 
@@ -1260,7 +1440,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line469">line 469</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line505">line 505</a>
     </li></ul></dd>
     
 
@@ -1366,7 +1546,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line484">line 484</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line520">line 520</a>
     </li></ul></dd>
     
 
@@ -1468,7 +1648,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line498">line 498</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line534">line 534</a>
     </li></ul></dd>
     
 
@@ -1570,7 +1750,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line513">line 513</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line549">line 549</a>
     </li></ul></dd>
     
 
@@ -1721,7 +1901,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line550">line 550</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line586">line 586</a>
     </li></ul></dd>
     
 
@@ -1935,7 +2115,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Mar 22 2017 17:06:20 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Nov 27 2017 17:08:54 GMT+0200 (FLE Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

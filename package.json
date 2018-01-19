@@ -1,12 +1,12 @@
 {
   "name": "media-recorder-js",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "WebRTC media recorder library for Javascript",
   "main": "src/index.js",
   "scripts": {
     "generate-docs": "node_modules/.bin/jsdoc -c .jsdoc.json",
     "develop": "gulp develop",
-    "build": "npm run lint && gulp && gulp compress && npm run generate-docs",
+    "build": "npm run lint && gulp && gulp compress && gulp compress:worker && npm run generate-docs",
     "connect": "gulp connect",
     "lint": "eslint ./src/*.js"
   },
@@ -20,13 +20,13 @@
   },
   "homepage": "https://github.com/QuickBlox/javascript-media-recorder#readme",
   "devDependencies": {
-    "browserify": "^14.1.0",
+    "browserify": "^14.5.0",
     "docdash": "^0.4.0",
     "gulp": "^3.9.1",
     "gulp-connect": "^5.0.0",
     "gulp-notify": "^2.2.0",
     "gulp-plumber": "^1.1.0",
-    "gulp-uglify": "^2.0.0",
+    "gulp-uglify": "^3.0.0",
     "jsdoc": "^3.4.3",
     "vinyl-source-stream": "^1.1.0"
   },

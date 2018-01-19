@@ -1,14 +1,12 @@
 'use strict';
 
-/*global lamejs, Float32Array, Int16Array, Int8Array, ArrayBuffer, DataView */
-
-
 var ERRORS = require('./errors');
 
 /**
  * @constructor QBMediaRecorder
  * @param {Object}   [opts] - Object of parameters.
  * @param {String}   opts[].mimeType=video - Specifies the media type and container format for the recording. You can set simply: 'video' or 'audio' or 'audio/webm' ('audio/wav' or 'audio/mp3' mimeTypes uses AudioContext API instead of MediaRecorder API);
+ * @param {String}   opts[].workerPath - Relative path from index.html.
  * @param {Number}   opts[].timeslice=1000 - The minimum number of milliseconds of data to return in a single Blob, fire 'ondataavaible' callback (isn't need to use with 'audio/wav' of 'audio/mp3').
  * @param {Boolean}  opts[].ignoreMutedMedia=true - What to do with a muted input MediaStreamTrack, e.g. insert black frames/zero audio volume in the recording or ignore altogether.
  * @param {Function} opts[].onstart - Called to handle the start event.
@@ -33,19 +31,32 @@ var ERRORS = require('./errors');
  * // uses as global variable, QBMediaRecorder is built as a UMD module.
  * var recorder = new QBMediaRecorder(opts);
  *
- * @see For record 'audio/mp3' need to connect encoderMP3.
- * Just add {@link https://www.npmjs.com/package/lamejs|'lame.min.js'} before init QBMediaRecorder.
+ * @example
+ * // For record 'audio/mp3' or 'audio/wav' need to add {@link https://github.com/QuickBlox/javascript-media-recorder/blob/master/qbAudioRecorderWorker.js|'qbAudioRecorderWorker.js'} file to your project.
+ * var opts = {
+ *     // use named function
+ *     onstart: function onStart() {
+ *         console.log('Recorder is started');
+ *     },
+ *     onstop: function onStop(Blob) {
+ *         videoElement.src = URL.createObjectURL(blob);
+ *     },
+ *     // 'audio/wav' or 'audio/mp3'
+ *     mimeType: 'audio/mp3',
+ *     // set relative path (from folder node_modules for example)
+ *     workerPath: '../node_modules/javascript-media-recorder/qbAudioRecorderWorker.js'
+ * };
+ *
+ * // uses as global variable, QBMediaRecorder is built as a UMD module.
+ * var recorder = new QBMediaRecorder(opts);
  */
 function QBMediaRecorder(opts) {
-    var prefferedMimeType = opts && opts.mimeType ? opts.mimeType : false;
-    this._customMimeType = (prefferedMimeType === 'audio/wav') ? 'audio/wav' :
-                           (prefferedMimeType === 'audio/mp3') ? 'audio/mp3' : false;
+    this.toggleMimeType(opts);
 
-    if(!QBMediaRecorder.isAvailable() && !this._customMimeType) {
-        throw new Error(ERRORS.unsupport);
+    if (opts.workerPath) {
+        this._setCustomRecorderTools(opts.workerPath);
     }
 
-    this.mimeType = this._getMimeType(prefferedMimeType);
     this.timeslice = opts && opts.timeslice && isNaN(+opts.timeslice) ? opts.timeslice : 1000;
     this.callbacks = opts ? this._getCallbacks(opts) : {};
     this.recordedBlobs = [];
@@ -55,36 +66,75 @@ function QBMediaRecorder(opts) {
     this._mediaRecorder = null;
     this._recordedChunks = [];
     this._keepRecording = false;
-
-    if (this._customMimeType) {
-        this._setCustomRecorderTools();
-    }
 }
 
-QBMediaRecorder.prototype._setCustomRecorderTools = function () {
-    if(!QBMediaRecorder._isAudioContext()) {
+/**
+ * @param  {String} mimeType - The mimeType to set as option.
+ * @return {Boolean}         - True if the MediaRecorder implementation is capable of recording Blob objects for the specified MIME type.
+ *
+ * @example
+ * var opts = {
+ *     onstart: function onStart() {
+ *         console.log('Recorder is started');
+ *     },
+ *     onstop: function onStop(Blob) {
+ *         videoElement.src = URL.createObjectURL(blob);
+ *     },
+ *     mimeType: 'video/mp4',
+ *     // set the path to the worker before if 'audio/wav' or 'audio/mp3' mimeTypes will be used.
+ *     workerPath: '../node_modules/javascript-media-recorder/qbAudioRecorderWorker.js'
+ * };
+ *
+ * var recorder = new QBMediaRecorder(opts);
+ *
+ * recorder.toggleMimeType('audio/mp3');
+ */
+QBMediaRecorder.prototype.toggleMimeType = function(mimeType) {
+    var prefferedMimeType = mimeType ? mimeType : false;
+
+    this._customMimeType = (prefferedMimeType === 'audio/wav') ? 'audio/wav' :
+        (prefferedMimeType === 'audio/mp3') ? 'audio/mp3' : false;
+
+    if (!QBMediaRecorder.isAvailable() && !this._customMimeType) {
         throw new Error(ERRORS.unsupport);
     }
 
+    this.mimeType = this._customMimeType ? this._customMimeType : this._getMimeType(prefferedMimeType);
+};
+
+QBMediaRecorder.prototype._setCustomRecorderTools = function(path) {
     var self = this;
 
-    self.mimeType = self._customMimeType;
-    /*
-    * context = new AudioContext();
-    * context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOutputChannels);
-    *
-    * link: https://developer.mozilla.org/ru/docs/Web/API/AudioContext/createScriptProcessor
-    */
-    self.BUFFER_SIZE = 2048; // the buffer size in units of sample-frames.
-    self.INPUT_CHANNELS = 1; // the number of channels for this node's input, defaults to 2
-    self.OUTPUT_CHANNELS = 1; // the number of channels for this node's output, defaults to 2
-    self._audioContext = null;
+    // init worker for custom audio types (audio/wav, audio/mp3)
+    try {
+        self._worker = new Worker(path);
 
-    self._buffer = [];
-    self._recordingLength = 0;
+        self._postMessageToWorker({
+            cmd: 'init',
+            mimeType: self.mimeType
+        });
 
-    if (QBMediaRecorder._isMp3Encoder() && this._customMimeType === 'audio/mp3') {
-        self._mp3encoder = new lamejs.Mp3Encoder(1, 48000, 256);
+        self._worker.onmessage = function(event) {
+            self._createBlob(event.data);
+            self._closeAudioProcess();
+        };
+
+        if (!QBMediaRecorder._isAudioContext()) {
+            throw new Error(ERRORS.unsupportAudioContext);
+        }
+
+        /*
+        * context = new AudioContext();
+        * context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOutputChannels);
+        *
+        * link: https://developer.mozilla.org/ru/docs/Web/API/AudioContext/createScriptProcessor
+        */
+        self.BUFFER_SIZE = 2048; // the buffer size in units of sample-frames.
+        self.INPUT_CHANNELS = 1; // the number of channels for this node's input, defaults to 2
+        self.OUTPUT_CHANNELS = 1; // the number of channels for this node's output, defaults to 2
+        self._audioContext = null;
+    } catch(e) {
+        throw new Error(ERRORS.unsupportCustomAudioRecorder, e);
     }
 };
 
@@ -139,10 +189,6 @@ QBMediaRecorder._isAudioContext = function () {
     return !!(window && (window.AudioContext || window.webkitAudioContext));
 };
 
-QBMediaRecorder._isMp3Encoder = function () {
-    return !!(window && (window.AudioContext || window.webkitAudioContext) && window.lamejs);
-};
-
 /**
  * Returns a Boolean which is true if the MIME type specified is one the user agent can record.
  * @param  {String} mimeType - The mimeType to check.
@@ -172,7 +218,7 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
             break;
 
         case 'audio/mp3':
-            if (QBMediaRecorder._isAudioContext() && QBMediaRecorder._isMp3Encoder()) {
+            if (QBMediaRecorder._isAudioContext()) {
                 result = true;
             }
             break;
@@ -188,7 +234,7 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
 /**
  * Return all supported mime types and container format.
  * @param  {String} [type=video] Type of media.
- * @return {Array}                   Array of supported mimetypes.Recommended mimetype has 0 index.
+ * @return {Array}               Array of supported mimetypes. Recommended mimetype has 0 index.
  *
  * @example
  * var type = QBMediaRecorder.getSupportedMimeTypes('audio');
@@ -197,7 +243,7 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
 QBMediaRecorder.getSupportedMimeTypes = function(type) {
     var typeMedia = type || 'video';
 
-    if(!QBMediaRecorder.isAvailable()) {
+    if (!QBMediaRecorder.isAvailable()) {
         throw new Error(ERRORS.unsupport);
     }
 
@@ -236,7 +282,7 @@ QBMediaRecorder.prototype.getState = function() {
  *     onstart: function onStart() {
  *         var time = 0,
  *             step = 1000;
- *         
+ *
  *         setTimeout(function () {
  *             time += step;
  *             console.info(`You are recording ${time} sec.`);
@@ -430,31 +476,21 @@ QBMediaRecorder.prototype._setEvents = function() {
                 break;
         }
 
-        if(self._mediaRecorder.state !== 'inactive') {
+        if (self._mediaRecorder.state !== 'inactive') {
             self._mediaRecorder.stop();
         }
 
-        if(self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
+        if (self._userCallbacks && typeof self._userCallbacks.onErrorRecording === 'function') {
             self._fireCallback('onerror', error);
         }
     };
 
     self._mediaRecorder.onstop = function() {
-        var blob = new Blob(self._recordedChunks, {
-            'type' : self.mimeType
-        });
-
-        self.recordedBlobs.push(blob);
-
-        if(!self._keepRecording) {
-            if(self.recordedBlobs.length > 1) {
-                self._fireCallback('onstop', blob);
-            } else {
-                self._fireCallback('onstop', self.recordedBlobs[0]);
-            }
+        if (self._customMimeType) {
+            self._stopAudioProcess();
+        } else {
+            self._createBlob(self._recordedChunks);
         }
-
-        self._keepRecording = false;
     };
 
     self._mediaRecorder.start(self.timeslice);
@@ -575,6 +611,26 @@ QBMediaRecorder.prototype.download = function(fileName, blob) {
     }, 100);
 };
 
+QBMediaRecorder.prototype._createBlob = function(chunks) {
+    var self = this;
+
+    var blob = new Blob(chunks, {
+        'type' : self.mimeType
+    });
+
+    self.recordedBlobs.push(blob);
+
+    if(!self._keepRecording) {
+        if(self.recordedBlobs.length > 1) {
+            self._fireCallback('onstop', blob);
+        } else {
+            self._fireCallback('onstop', self.recordedBlobs[0]);
+        }
+    }
+
+    self._keepRecording = false;
+};
+
 /**
  * Create a Blob from recorded chunks.
  * @access private
@@ -634,10 +690,19 @@ QBMediaRecorder.prototype._startAudioProcess = function() {
     recorder = self._audioContext.createScriptProcessor(self.BUFFER_SIZE, self.INPUT_CHANNELS, self.OUTPUT_CHANNELS);
     audioInput.connect(volume);
 
+    self._postMessageToWorker({
+        cmd: 'init',
+        mimeType: self.mimeType,
+        sampleRate: audioInput.context.sampleRate
+    });
+
     recorder.onaudioprocess = function(e) {
         if (self._mediaRecorder.state === QBMediaRecorder._STATES[1]) {
-            self._buffer.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-            self._recordingLength += self.BUFFER_SIZE;
+            self._postMessageToWorker({
+                cmd: 'record',
+                bufferChunk: e.inputBuffer.getChannelData(0),
+                bufferSize: self.BUFFER_SIZE
+            });
         }
     };
 
@@ -652,99 +717,19 @@ QBMediaRecorder.prototype._closeAudioProcess = function() {
         self._audioContext.close()
             .then(function() {
                 self._audioContext = null;
-                self._recordingLength = 0;
-                self._buffer = [];
+                self._postMessageToWorker({cmd: 'init', mimeType: ''});
             });
     }
 };
 
 QBMediaRecorder.prototype._stopAudioProcess = function() {
-    var self = this;
-
-    self._recordedChunks = self._getBlobData();
-    self._closeAudioProcess();
+    this._postMessageToWorker({cmd: 'finish'});
 };
 
-QBMediaRecorder.prototype._encodeMP3 = function(buffer) {
-    var self = this,
-        data = new Int16Array(buffer),
-        encodedBuffer = self._mp3encoder.encodeBuffer(data),
-        flushedBuffer = self._mp3encoder.flush(),
-        mp3Data = [];
-
-    mp3Data.push(encodedBuffer);
-    mp3Data.push(new Int8Array(flushedBuffer));
-
-    return mp3Data;
-};
-
-QBMediaRecorder.prototype._encodeWAV = function(samples) {
-    var buffer = new ArrayBuffer(44 + samples.length * 2),
-        view = new DataView(buffer);
-
-    _writeString(view, 0, 'RIFF');
-    view.setUint32(4, 32 + samples.length * 2, true);
-    _writeString(view, 8, 'WAVE');
-    _writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, this.sampleRate, true);
-    view.setUint32(28, this.sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
-    _writeString(view, 36, 'data');
-    view.setUint32(40, samples.length * 2, true);
-
-    _floatTo16BitPCM(view, 44, samples);
-
-    function _floatTo16BitPCM(output, offset, input) {
-        for (var i = 0; i < input.length; i++, offset += 2) {
-            var s = Math.max(-1, Math.min(1, input[i]));
-            output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-        }
+QBMediaRecorder.prototype._postMessageToWorker = function(data) {
+    if (this._worker) {
+        this._worker.postMessage(data);
     }
-
-    function _writeString(view, offset, string) {
-        for (var i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i));
-        }
-    }
-
-    return view;
-};
-
-QBMediaRecorder.prototype._getBlobData = function() {
-    var self = this,
-        result = new Float32Array(self._recordingLength),
-        bufferLength = self._buffer.length,
-        offset = 0,
-        buffer,
-        view,
-        data;
-
-    for (var i = 0; i < bufferLength; i++){
-        buffer = self._buffer[i];
-        result.set(buffer, offset);
-        offset += buffer.length;
-    }
-
-    view = self._encodeWAV(result);
-
-    switch(self._customMimeType) {
-        case 'audio/wav':
-            data = [view];
-            break;
-
-        case 'audio/mp3':
-            data = self._encodeMP3(view.buffer);
-            break;
-
-        default:
-            throw new Error(ERRORS.unsupportMediaRecorderWithOptions);
-    }
-
-    return data;
 };
 
 module.exports = QBMediaRecorder;
