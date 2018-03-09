@@ -51,7 +51,7 @@ var ERRORS = require('./errors');
  * var recorder = new QBMediaRecorder(opts);
  */
 function QBMediaRecorder(opts) {
-    this.toggleMimeType(opts);
+    this.toggleMimeType(opts.mimeType);
 
     if (opts.workerPath) {
         this._setCustomRecorderTools(opts.workerPath);
@@ -119,7 +119,7 @@ QBMediaRecorder.prototype._setCustomRecorderTools = function(path) {
             self._closeAudioProcess();
         };
 
-        if (!QBMediaRecorder._isAudioContext()) {
+        if (!QBMediaRecorder.isAudioContext()) {
             throw new Error(ERRORS.unsupportAudioContext);
         }
 
@@ -185,7 +185,17 @@ QBMediaRecorder.isAvailable = function() {
     return !!(window && window.MediaRecorder && typeof window.MediaRecorder.isTypeSupported === 'function' && window.Blob);
 };
 
-QBMediaRecorder._isAudioContext = function () {
+/**
+ * It checks the AudioContext API.
+ * Checks window.AudioContext or window.webkitAudioContext.
+ * @return {Boolean} Returns true if the AudioContext API is available in a browser, or false otherwise.
+ *
+ * @example
+ * if(QBMediaRecorder.isAudioContext()) {
+ *     // ... the QBMediaRecorder is available for recording 'audio/mp3' or 'audio/wav'
+ * }
+ */
+QBMediaRecorder.isAudioContext = function() {
     return !!(window && (window.AudioContext || window.webkitAudioContext));
 };
 
@@ -212,13 +222,13 @@ QBMediaRecorder.isTypeSupported = function(mimeType) {
 
     switch(mimeType) {
         case 'audio/wav':
-            if (QBMediaRecorder._isAudioContext()) {
+            if (QBMediaRecorder.isAudioContext()) {
                 result = true;
             }
             break;
 
         case 'audio/mp3':
-            if (QBMediaRecorder._isAudioContext()) {
+            if (QBMediaRecorder.isAudioContext()) {
                 result = true;
             }
             break;
@@ -670,7 +680,7 @@ QBMediaRecorder.prototype._getExtension = function() {
 
 
 QBMediaRecorder.prototype._startAudioProcess = function() {
-    if(!QBMediaRecorder._isAudioContext()) {
+    if(!QBMediaRecorder.isAudioContext()) {
         throw new Error(ERRORS.unsupport);
     }
 
