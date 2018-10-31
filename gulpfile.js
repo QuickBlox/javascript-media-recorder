@@ -51,11 +51,11 @@ gulp.task('compress:worker', function() {
         .pipe(notify('Compress task is finished'));
 });
 
-gulp.task('watch', ['build'], function() {
-    gulp.watch('src/*.js', ['build']);
-});
+gulp.task('watch', gulp.series('build', function() {
+    gulp.watch('src/*.js', gulp.series('build'));
+}));
 
-gulp.task('default', ['build']);
+gulp.task('default', gulp.series('build'));
 
-gulp.task('develop', ['connect', 'watch']);
+gulp.task('develop', gulp.series('connect', 'watch'));
 
